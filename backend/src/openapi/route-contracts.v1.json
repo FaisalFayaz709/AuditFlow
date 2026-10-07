@@ -1,0 +1,5863 @@
+{
+  "schemaVersion": "auditflow-api-contracts-v1",
+  "generatedFromPass": "Pass 50 API Contract Completion",
+  "routes": [
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/health",
+      "operationId": "healthCheck",
+      "tags": [
+        "Health"
+      ],
+      "summary": "Process liveness check.",
+      "authentication": {
+        "required": false,
+        "scheme": "none",
+        "cookieName": null,
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "public",
+        "predicate": "No tenant data returned.",
+        "predicateId": "public.no_tenant_data"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": null,
+        "querySchema": null,
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "HealthResponse",
+        "envelope": true
+      },
+      "errors": [
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "none",
+        "rule": "Read-only liveness check."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "health"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/ready",
+      "operationId": "readinessCheck",
+      "tags": [
+        "Health"
+      ],
+      "summary": "Dependency readiness check for deployment platforms and smoke tests.",
+      "authentication": {
+        "required": false,
+        "scheme": "none",
+        "cookieName": null,
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "public",
+        "predicate": "No tenant data returned; dependency details are coarse and secret-free.",
+        "predicateId": "public.no_tenant_data"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional"
+        ],
+        "pathSchema": null,
+        "querySchema": null,
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "ReadinessResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        500,
+        503
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "Read-only operational check; clients may retry."
+      },
+      "concurrency": {
+        "strategy": "none",
+        "rule": "No business state mutation."
+      },
+      "audit": {
+        "event": "none",
+        "rule": "No business audit event for anonymous operational readiness checks.",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "operational-readiness"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/auth/register",
+      "operationId": "authRegister",
+      "tags": [
+        "Auth"
+      ],
+      "summary": "Create user, initial company, OWNER membership, verification token, and initial session.",
+      "authentication": {
+        "required": false,
+        "scheme": "none",
+        "cookieName": null,
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "public",
+        "predicate": "Creates initial tenant in one transaction where feasible.",
+        "predicateId": "public.no_tenant_data"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional"
+        ],
+        "pathSchema": null,
+        "querySchema": null,
+        "bodySchema": "RegisterBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 201,
+        "schema": "RegisterResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing service validates tenant scope and current state; Pass 28 requires future mutations to use conditional update guards when the route changes workflow state."
+      },
+      "audit": {
+        "event": "AUTH_REGISTERED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "auth"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "operationId": "authLogin",
+      "tags": [
+        "Auth"
+      ],
+      "summary": "Create an opaque server-side session and set the HttpOnly session cookie.",
+      "authentication": {
+        "required": false,
+        "scheme": "none",
+        "cookieName": null,
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "public",
+        "predicate": "Valid credentials and non-disabled user.",
+        "predicateId": "public.no_tenant_data"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional"
+        ],
+        "pathSchema": null,
+        "querySchema": null,
+        "bodySchema": "LoginBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "LoginResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing service validates tenant scope and current state; Pass 28 requires future mutations to use conditional update guards when the route changes workflow state."
+      },
+      "audit": {
+        "event": "AUTH_LOGIN_SUCCEEDED / AUTH_LOGIN_FAILED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "auth"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/auth/logout",
+      "operationId": "authLogout",
+      "tags": [
+        "Auth"
+      ],
+      "summary": "Revoke current session and clear the session cookie.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "auth.session.revoke_self",
+        "predicate": "Current non-revoked session.",
+        "predicateId": "auth.session.revoke_self"
+      },
+      "request": {
+        "headers": [
+          "x-csrf-token",
+          "x-request-id optional"
+        ],
+        "pathSchema": null,
+        "querySchema": null,
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 204,
+        "schema": "NoContent",
+        "envelope": false
+      },
+      "errors": [
+        401,
+        403,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing service validates tenant scope and current state; Pass 28 requires future mutations to use conditional update guards when the route changes workflow state."
+      },
+      "audit": {
+        "event": "AUTH_LOGOUT",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "auth"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/auth/me",
+      "operationId": "authMe",
+      "tags": [
+        "Auth"
+      ],
+      "summary": "Return current user, session, and active memberships.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "auth.me",
+        "predicate": "Current non-revoked session.",
+        "predicateId": "auth.me"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional"
+        ],
+        "pathSchema": null,
+        "querySchema": null,
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "CurrentUserResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        401,
+        403,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "read-after-membership-resolution",
+        "rule": "Role and membership changes take effect on next request."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/auth/csrf",
+      "operationId": "authCsrf",
+      "tags": [
+        "Auth"
+      ],
+      "summary": "Issue a CSRF token bound independently from the session cookie.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "auth.csrf.issue",
+        "predicate": "Current non-revoked session.",
+        "predicateId": "auth.csrf.issue"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional"
+        ],
+        "pathSchema": null,
+        "querySchema": null,
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "CsrfTokenResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        401,
+        403,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing services validate current state and tenant scope before mutation."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "auth"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/auth/forgot-password",
+      "operationId": "authForgotPassword",
+      "tags": [
+        "Auth"
+      ],
+      "summary": "Issue reset workflow without revealing whether the email exists.",
+      "authentication": {
+        "required": false,
+        "scheme": "none",
+        "cookieName": null,
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "public",
+        "predicate": "Rate limited by IP and normalized email.",
+        "predicateId": "public.no_tenant_data"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional"
+        ],
+        "pathSchema": null,
+        "querySchema": null,
+        "bodySchema": "ForgotPasswordBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "ForgotPasswordResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing service validates tenant scope and current state; Pass 28 requires future mutations to use conditional update guards when the route changes workflow state."
+      },
+      "audit": {
+        "event": "PASSWORD_RESET",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "auth"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/auth/reset-password",
+      "operationId": "authResetPassword",
+      "tags": [
+        "Auth"
+      ],
+      "summary": "Reset password using single-use token and revoke active sessions.",
+      "authentication": {
+        "required": false,
+        "scheme": "none",
+        "cookieName": null,
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "public",
+        "predicate": "Valid unexpired reset token.",
+        "predicateId": "public.no_tenant_data"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional"
+        ],
+        "pathSchema": null,
+        "querySchema": null,
+        "bodySchema": "ResetPasswordBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 204,
+        "schema": "NoContent",
+        "envelope": false
+      },
+      "errors": [
+        400,
+        401,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing service validates tenant scope and current state; Pass 28 requires future mutations to use conditional update guards when the route changes workflow state."
+      },
+      "audit": {
+        "event": "PASSWORD_RESET",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "auth"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/auth/verify-email",
+      "operationId": "authVerifyEmail",
+      "tags": [
+        "Auth"
+      ],
+      "summary": "Verify email using a single-use verification token.",
+      "authentication": {
+        "required": false,
+        "scheme": "none",
+        "cookieName": null,
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "public",
+        "predicate": "Valid unexpired verification token.",
+        "predicateId": "public.no_tenant_data"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional"
+        ],
+        "pathSchema": null,
+        "querySchema": null,
+        "bodySchema": "VerifyEmailBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 204,
+        "schema": "NoContent",
+        "envelope": false
+      },
+      "errors": [
+        400,
+        401,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing service validates tenant scope and current state; Pass 28 requires future mutations to use conditional update guards when the route changes workflow state."
+      },
+      "audit": {
+        "event": "AUTH_EMAIL_VERIFIED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "auth"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/auth/change-password",
+      "operationId": "authChangePassword",
+      "tags": [
+        "Auth"
+      ],
+      "summary": "Change password and clear/revoke current session after credential change.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "auth.password.change",
+        "predicate": "Current user plus current password validation.",
+        "predicateId": "auth.password.change"
+      },
+      "request": {
+        "headers": [
+          "x-csrf-token",
+          "x-request-id optional"
+        ],
+        "pathSchema": null,
+        "querySchema": null,
+        "bodySchema": "ChangePasswordBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 204,
+        "schema": "NoContent",
+        "envelope": false
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing service validates tenant scope and current state; Pass 28 requires future mutations to use conditional update guards when the route changes workflow state."
+      },
+      "audit": {
+        "event": "PASSWORD_RESET",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "auth"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/companies",
+      "operationId": "companyCreate",
+      "tags": [
+        "Companies"
+      ],
+      "summary": "Create a company workspace for the current user.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "companies.create",
+        "predicate": "Active tenant membership plus named predicate: Authenticated user creates own workspace membership.",
+        "predicateId": "companies.create"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": null,
+        "querySchema": null,
+        "bodySchema": "CreateCompanyBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 201,
+        "schema": "CompanyResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing service validates tenant scope and current state; Pass 28 requires future mutations to use conditional update guards when the route changes workflow state."
+      },
+      "audit": {
+        "event": "COMPANY_CREATED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/companies/current",
+      "operationId": "companyCurrent",
+      "tags": [
+        "Companies"
+      ],
+      "summary": "Return active company context derived from membership.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "companies.read_current",
+        "predicate": "Active tenant membership plus named predicate: Active membership selected by header or default membership.",
+        "predicateId": "companies.read_current"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": null,
+        "querySchema": "CurrentCompanyQueryV1",
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "CurrentCompanyResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "membership-resolution",
+        "rule": "Never trust company_id from browser without membership lookup."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "PATCH",
+      "path": "/api/companies/:id",
+      "operationId": "companyUpdate",
+      "tags": [
+        "Companies"
+      ],
+      "summary": "Update tenant company profile.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "company.profile.update",
+        "predicate": "OWNER or ADMIN in target tenant.",
+        "predicateId": "company.profile.update"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "CompanyIdParamsV1",
+        "querySchema": null,
+        "bodySchema": "UpdateCompanyBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "CompanyResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing service validates tenant scope and current state; Pass 28 requires future mutations to use conditional update guards when the route changes workflow state."
+      },
+      "audit": {
+        "event": "COMPANY_UPDATED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/companies/:id/members",
+      "operationId": "membersList",
+      "tags": [
+        "Members"
+      ],
+      "summary": "List tenant members.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "members.read",
+        "predicate": "Active target tenant membership.",
+        "predicateId": "members.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "CompanyIdParamsV1",
+        "querySchema": null,
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "MemberListResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing services validate current state and tenant scope before mutation."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "PATCH",
+      "path": "/api/companies/:companyId/members/:memberId/role",
+      "operationId": "memberChangeRole",
+      "tags": [
+        "Members"
+      ],
+      "summary": "Change a member role with final-owner protection.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "members.role.change",
+        "predicate": "Active tenant membership plus named predicate: OWNER always; ADMIN only where policy permits and never removes final OWNER.",
+        "predicateId": "members.role.change"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "MemberRoleParamsV1",
+        "querySchema": null,
+        "bodySchema": "ChangeMemberRoleBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "MemberResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing service validates tenant scope and current state; Pass 28 requires future mutations to use conditional update guards when the route changes workflow state."
+      },
+      "audit": {
+        "event": "MEMBER_ROLE_CHANGED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "DELETE",
+      "path": "/api/companies/:companyId/members/:memberId",
+      "operationId": "memberRemove",
+      "tags": [
+        "Members"
+      ],
+      "summary": "Disable/remove member while preserving audit accountability.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "members.remove",
+        "predicate": "Active tenant membership plus named predicate: OWNER/ADMIN with final OWNER protection.",
+        "predicateId": "members.remove"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "MemberParamsV1",
+        "querySchema": null,
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 204,
+        "schema": "NoContent",
+        "envelope": false
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing service validates tenant scope and current state; Pass 28 requires future mutations to use conditional update guards when the route changes workflow state."
+      },
+      "audit": {
+        "event": "MEMBER_REMOVED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/companies/:id/invitations",
+      "operationId": "invitationsList",
+      "tags": [
+        "Invitations"
+      ],
+      "summary": "List pending/accepted/revoked/expired invitations for a company.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "invitations.read",
+        "predicate": "OWNER or ADMIN in target tenant.",
+        "predicateId": "invitations.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "CompanyIdParamsV1",
+        "querySchema": null,
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "InvitationListResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing services validate current state and tenant scope before mutation."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/companies/:id/invitations",
+      "operationId": "invitationCreate",
+      "tags": [
+        "Invitations"
+      ],
+      "summary": "Invite a member using a hashed single-use expiring token.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "invitations.manage",
+        "predicate": "OWNER or ADMIN in target tenant.",
+        "predicateId": "invitations.manage"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "CompanyIdParamsV1",
+        "querySchema": null,
+        "bodySchema": "InviteMemberBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 201,
+        "schema": "InvitationResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing service validates tenant scope and current state; Pass 28 requires future mutations to use conditional update guards when the route changes workflow state."
+      },
+      "audit": {
+        "event": "MEMBER_INVITED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/invitations/:token/accept",
+      "operationId": "invitationAccept",
+      "tags": [
+        "Invitations"
+      ],
+      "summary": "Accept invitation into company after authenticated user email match.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "invitations.accept_self",
+        "predicate": "Active tenant membership plus named predicate: Authenticated user email matches invitation email unless reissued.",
+        "predicateId": "invitations.accept_self"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "AcceptInvitationParamsV1",
+        "querySchema": null,
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "MemberResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing service validates tenant scope and current state; Pass 28 requires future mutations to use conditional update guards when the route changes workflow state."
+      },
+      "audit": {
+        "event": "MEMBER_INVITATION_ACCEPTED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/companies/:id/invitations/:invitationId/resend",
+      "operationId": "invitationResend",
+      "tags": [
+        "Invitations"
+      ],
+      "summary": "Revoke/replace the previous active invitation token.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "invitations.manage",
+        "predicate": "OWNER or ADMIN in target tenant.",
+        "predicateId": "invitations.manage"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "InvitationIdParamsV1",
+        "querySchema": null,
+        "bodySchema": "ResendInvitationBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "InvitationResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing service validates tenant scope and current state; Pass 28 requires future mutations to use conditional update guards when the route changes workflow state."
+      },
+      "audit": {
+        "event": "MEMBER_INVITED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "DELETE",
+      "path": "/api/companies/:id/invitations/:invitationId",
+      "operationId": "invitationRevoke",
+      "tags": [
+        "Invitations"
+      ],
+      "summary": "Revoke an invitation before acceptance.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "invitations.manage",
+        "predicate": "OWNER or ADMIN in target tenant.",
+        "predicateId": "invitations.manage"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "InvitationIdParamsV1",
+        "querySchema": null,
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 204,
+        "schema": "NoContent",
+        "envelope": false
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing service validates tenant scope and current state; Pass 28 requires future mutations to use conditional update guards when the route changes workflow state."
+      },
+      "audit": {
+        "event": "MEMBER_REMOVED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/frameworks",
+      "operationId": "frameworksList",
+      "tags": [
+        "Frameworks"
+      ],
+      "summary": "List framework/version templates.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "frameworks.read",
+        "predicate": "Authenticated user; tenant-independent template read.",
+        "predicateId": "frameworks.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": null,
+        "querySchema": "FrameworkListQueryV1",
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "FrameworkListResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        401,
+        403,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing services validate current state and tenant scope before mutation."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/frameworks/:id",
+      "operationId": "frameworkDetail",
+      "tags": [
+        "Frameworks"
+      ],
+      "summary": "Read exact framework/version details.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "frameworks.read",
+        "predicate": "Authenticated user; no tenant data returned.",
+        "predicateId": "frameworks.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "FrameworkIdParamsV1",
+        "querySchema": null,
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "FrameworkDetailResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing services validate current state and tenant scope before mutation."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/companies/:companyId/frameworks/:frameworkVersionId/enable",
+      "operationId": "frameworkEnable",
+      "tags": [
+        "Frameworks"
+      ],
+      "summary": "Enable an exact framework version for a company enrollment.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "frameworks.enable",
+        "predicate": "OWNER, ADMIN, or COMPLIANCE_MANAGER in target tenant.",
+        "predicateId": "frameworks.enable"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "EnableFrameworkParamsV1",
+        "querySchema": null,
+        "bodySchema": "EnableFrameworkBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 201,
+        "schema": "CompanyFrameworkResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing service validates tenant scope and current state; Pass 28 requires future mutations to use conditional update guards when the route changes workflow state."
+      },
+      "audit": {
+        "event": "FRAMEWORK_ENABLED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/controls",
+      "operationId": "controlsList",
+      "tags": [
+        "Controls"
+      ],
+      "summary": "List tenant enrolled controls.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "controls.read",
+        "predicate": "Active tenant membership; AUDITOR requires future grant.",
+        "predicateId": "controls.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": null,
+        "querySchema": "ControlListQueryV1",
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "ControlListResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing services validate current state and tenant scope before mutation."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/controls/:id/readiness-explanation",
+      "operationId": "controlReadinessExplanation",
+      "tags": [
+        "Controls",
+        "Dashboard"
+      ],
+      "summary": "Explain why one company control is ready, in progress, not started, or excluded from readiness.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "dashboard.read",
+        "predicate": "Target company control is resolved inside active tenant scope before returning trace details.",
+        "predicateId": "controls.readiness_explanation"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "ControlIdParamsV1",
+        "querySchema": null,
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "ControlReadinessExplanationResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "Read-only trace; clients may retry. No Idempotency-Key support required."
+      },
+      "concurrency": {
+        "strategy": "read-consistent-calculation",
+        "rule": "Readiness trace recomputes expiry, supersession, archive, mapping approval, and evidence approval at calculation time."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/controls/:id",
+      "operationId": "controlDetail",
+      "tags": [
+        "Controls"
+      ],
+      "summary": "Read control detail with requirements/tasks/evidence placeholders.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "controls.read",
+        "predicate": "Target control loaded inside active tenant enrollment.",
+        "predicateId": "controls.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "ControlIdParamsV1",
+        "querySchema": null,
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "ControlDetailResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing services validate current state and tenant scope before mutation."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "PATCH",
+      "path": "/api/controls/:id/company-state",
+      "operationId": "controlUpdateCompanyState",
+      "tags": [
+        "Controls"
+      ],
+      "summary": "Set applicability and owner for company control.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "controls.manage",
+        "predicate": "Active tenant membership plus named predicate: OWNER, ADMIN, or COMPLIANCE_MANAGER; NOT_APPLICABLE requires reason and actor attribution.",
+        "predicateId": "controls.manage"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "ControlIdParamsV1",
+        "querySchema": null,
+        "bodySchema": "UpdateCompanyControlStateBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "CompanyControlResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing service validates tenant scope and current state; Pass 28 requires future mutations to use conditional update guards when the route changes workflow state."
+      },
+      "audit": {
+        "event": "CONTROL_APPLICABILITY_CHANGED / CONTROL_OWNER_CHANGED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/evidence/upload",
+      "operationId": "evidenceUpload",
+      "tags": [
+        "Evidence"
+      ],
+      "summary": "Upload a new evidence item/version through staged private-object flow.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "evidence.upload",
+        "predicate": "Active tenant membership with evidence.upload permission.",
+        "predicateId": "evidence.upload"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes",
+          "Idempotency-Key optional"
+        ],
+        "pathSchema": null,
+        "querySchema": null,
+        "bodySchema": "multipart: UploadMetadataV1 + file",
+        "contentType": "multipart/form-data"
+      },
+      "successResponse": {
+        "status": 201,
+        "schema": "EvidenceUploadResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        413,
+        415,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": true,
+        "rule": "Idempotency-Key or replay-safe state check returns the existing committed result within tenant scope; conflicting in-flight state returns 409.",
+        "header": "Idempotency-Key",
+        "scope": "tenant + method + path + authenticated actor + Idempotency-Key"
+      },
+      "concurrency": {
+        "strategy": "conditional-update-precondition",
+        "rule": "Idempotency-Key scoped by company; upload intent state changes use expected-status updateMany guards."
+      },
+      "audit": {
+        "event": "EVIDENCE_UPLOADED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "upload"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/evidence",
+      "operationId": "evidenceList",
+      "tags": [
+        "Evidence"
+      ],
+      "summary": "List tenant evidence items.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "evidence.read",
+        "predicate": "Active tenant membership; records loaded in tenant scope.",
+        "predicateId": "evidence.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": null,
+        "querySchema": "EvidenceListQueryV1",
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "EvidenceListResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing services validate current state and tenant scope before mutation."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/evidence/:id",
+      "operationId": "evidenceDetail",
+      "tags": [
+        "Evidence"
+      ],
+      "summary": "Read evidence item and current/version metadata.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "evidence.read",
+        "predicate": "Evidence item must belong to active tenant.",
+        "predicateId": "evidence.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "EvidenceIdParamsV1",
+        "querySchema": null,
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "EvidenceDetailResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing services validate current state and tenant scope before mutation."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/evidence/:id/versions",
+      "operationId": "evidenceUploadVersion",
+      "tags": [
+        "Evidence"
+      ],
+      "summary": "Upload a replacement/new version for an existing evidence item.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "evidence.upload",
+        "predicate": "Evidence item must belong to active tenant.",
+        "predicateId": "evidence.upload"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes",
+          "Idempotency-Key optional"
+        ],
+        "pathSchema": "EvidenceIdParamsV1",
+        "querySchema": null,
+        "bodySchema": "multipart: UploadMetadataV1 + file",
+        "contentType": "multipart/form-data"
+      },
+      "successResponse": {
+        "status": 201,
+        "schema": "EvidenceVersionResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        413,
+        415,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": true,
+        "rule": "Idempotency-Key or replay-safe state check returns the existing committed result within tenant scope; conflicting in-flight state returns 409.",
+        "header": "Idempotency-Key",
+        "scope": "tenant + method + path + authenticated actor + Idempotency-Key"
+      },
+      "concurrency": {
+        "strategy": "conditional-update-precondition",
+        "rule": "Idempotency-Key scoped by company; upload intent state changes use expected-status updateMany guards."
+      },
+      "audit": {
+        "event": "EVIDENCE_VERSION_CREATED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "upload"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/evidence/:id/versions",
+      "operationId": "evidenceVersionsList",
+      "tags": [
+        "Evidence"
+      ],
+      "summary": "List immutable evidence versions for an item.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "evidence.read",
+        "predicate": "Evidence item must belong to active tenant.",
+        "predicateId": "evidence.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "EvidenceIdParamsV1",
+        "querySchema": null,
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "EvidenceVersionListResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing services validate current state and tenant scope before mutation."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/evidence/versions/:versionId/download",
+      "operationId": "evidenceVersionDownload",
+      "tags": [
+        "Evidence"
+      ],
+      "summary": "Authorize and stream/download a private evidence version.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "evidence.read",
+        "predicate": "Tenant membership plus evidence.read; blocked for QUARANTINED and SECURITY_REJECTED.",
+        "predicateId": "evidence.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "EvidenceVersionIdParamsV1",
+        "querySchema": null,
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "BinaryEvidenceDownloadV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing services validate current state and tenant scope before mutation."
+      },
+      "audit": {
+        "event": "EVIDENCE_DOWNLOADED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "download"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/evidence/versions/:versionId/approve",
+      "operationId": "evidenceVersionApprove",
+      "tags": [
+        "Evidence"
+      ],
+      "summary": "Approve evidence version as usable proof after security clearance.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "evidence.review",
+        "predicate": "Active tenant membership plus named predicate: OWNER, ADMIN, or COMPLIANCE_MANAGER; state = NEEDS_REVIEW and malware status clean/bypassed only in non-production.",
+        "predicateId": "evidence.review"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "EvidenceVersionIdParamsV1",
+        "querySchema": null,
+        "bodySchema": "EvidenceApproveBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "EvidenceVersionResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "Not replayable without a fresh state read; clients receive 409 when the expected state changed."
+      },
+      "concurrency": {
+        "strategy": "conditional-update-precondition",
+        "rule": "conditional update requires version.status=NEEDS_REVIEW and evidence item current-approved pointer still matches the loaded value; concurrent reviewers receive 409."
+      },
+      "audit": {
+        "event": "EVIDENCE_APPROVED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/evidence/versions/:versionId/reject",
+      "operationId": "evidenceVersionReject",
+      "tags": [
+        "Evidence"
+      ],
+      "summary": "Reject evidence version with required reason.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "evidence.review",
+        "predicate": "Active tenant membership plus named predicate: OWNER, ADMIN, or COMPLIANCE_MANAGER; rejection reason required.",
+        "predicateId": "evidence.review"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "EvidenceVersionIdParamsV1",
+        "querySchema": null,
+        "bodySchema": "EvidenceRejectBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "EvidenceVersionResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "Not replayable without a fresh state read; clients receive 409 when the expected state changed."
+      },
+      "concurrency": {
+        "strategy": "conditional-update-precondition",
+        "rule": "conditional update requires version.status=NEEDS_REVIEW; approve/reject races resolve with exactly one winner and 409 for the loser."
+      },
+      "audit": {
+        "event": "EVIDENCE_REJECTED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "DELETE",
+      "path": "/api/evidence/:id",
+      "operationId": "evidenceArchive",
+      "tags": [
+        "Evidence"
+      ],
+      "summary": "Logically archive an evidence item.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "evidence.manage",
+        "predicate": "Active tenant membership with evidence management permission.",
+        "predicateId": "evidence.manage"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "EvidenceIdParamsV1",
+        "querySchema": null,
+        "bodySchema": "EvidenceArchiveBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "EvidenceItemResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing service validates tenant scope and current state; Pass 28 requires future mutations to use conditional update guards when the route changes workflow state."
+      },
+      "audit": {
+        "event": "EVIDENCE_ARCHIVED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/evidence/versions/:versionId/mappings",
+      "operationId": "mappingCreate",
+      "tags": [
+        "Mappings"
+      ],
+      "summary": "Create manual evidence-to-control/requirement mapping.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "mapping.create",
+        "predicate": "Active tenant membership; evidence version/control/requirement all loaded inside tenant scope.",
+        "predicateId": "mapping.create"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "EvidenceVersionIdParamsV1",
+        "querySchema": null,
+        "bodySchema": "CreateMappingBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 201,
+        "schema": "MappingResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing service validates tenant scope and current state; Pass 28 requires future mutations to use conditional update guards when the route changes workflow state."
+      },
+      "audit": {
+        "event": "MAPPING_CREATED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/evidence/versions/:versionId/mappings",
+      "operationId": "mappingListForEvidenceVersion",
+      "tags": [
+        "Mappings"
+      ],
+      "summary": "List mappings for one evidence version.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "mapping.read",
+        "predicate": "Evidence version belongs to active tenant.",
+        "predicateId": "mapping.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "EvidenceVersionIdParamsV1",
+        "querySchema": null,
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "MappingListResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing services validate current state and tenant scope before mutation."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/mappings/:id/approve",
+      "operationId": "mappingApprove",
+      "tags": [
+        "Mappings"
+      ],
+      "summary": "Approve a pending mapping so it may count if evidence is approved and valid.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "mapping.review",
+        "predicate": "OWNER, ADMIN, or COMPLIANCE_MANAGER; mapping loaded inside tenant scope.",
+        "predicateId": "mapping.review"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "MappingIdParamsV1",
+        "querySchema": null,
+        "bodySchema": "MappingReviewBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "MappingResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "Not replayable without a fresh state read; clients receive 409 when the expected state changed."
+      },
+      "concurrency": {
+        "strategy": "conditional-update-precondition",
+        "rule": "conditional update requires mapping status to equal the loaded reviewable state; duplicate approved mappings are also protected by the partial unique index."
+      },
+      "audit": {
+        "event": "MAPPING_APPROVED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/mappings/:id/reject",
+      "operationId": "mappingReject",
+      "tags": [
+        "Mappings"
+      ],
+      "summary": "Reject an incorrect/insufficient mapping.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "mapping.review",
+        "predicate": "OWNER, ADMIN, or COMPLIANCE_MANAGER; mapping loaded inside tenant scope.",
+        "predicateId": "mapping.review"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "MappingIdParamsV1",
+        "querySchema": null,
+        "bodySchema": "MappingReviewBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "MappingResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "Not replayable without a fresh state read; clients receive 409 when the expected state changed."
+      },
+      "concurrency": {
+        "strategy": "conditional-update-precondition",
+        "rule": "conditional update requires mapping status to equal the loaded reviewable state; approve/reject races resolve with exactly one winner."
+      },
+      "audit": {
+        "event": "MAPPING_REJECTED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/tasks",
+      "operationId": "taskCreate",
+      "tags": [
+        "Tasks"
+      ],
+      "summary": "Create evidence request task.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "tasks.manage",
+        "predicate": "OWNER, ADMIN, or COMPLIANCE_MANAGER in active tenant.",
+        "predicateId": "tasks.manage"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": null,
+        "querySchema": null,
+        "bodySchema": "CreateTaskBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 201,
+        "schema": "TaskResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing service validates tenant scope and current state; Pass 28 requires future mutations to use conditional update guards when the route changes workflow state."
+      },
+      "audit": {
+        "event": "TASK_CREATED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/tasks",
+      "operationId": "tasksList",
+      "tags": [
+        "Tasks"
+      ],
+      "summary": "List/filter tenant tasks.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "tasks.read",
+        "predicate": "Active tenant membership plus named predicate: Active membership; MEMBER only sees assigned tasks unless tasks.read_all.",
+        "predicateId": "tasks.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": null,
+        "querySchema": "TaskListQueryV1",
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "TaskListResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing services validate current state and tenant scope before mutation."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/tasks/:id",
+      "operationId": "taskDetail",
+      "tags": [
+        "Tasks"
+      ],
+      "summary": "Read task detail.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "tasks.read",
+        "predicate": "Active tenant membership plus named predicate: Task assigned to member OR permission tasks.read_all.",
+        "predicateId": "tasks.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "TaskIdParamsV1",
+        "querySchema": null,
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "TaskDetailResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing services validate current state and tenant scope before mutation."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "PATCH",
+      "path": "/api/tasks/:id",
+      "operationId": "taskUpdate",
+      "tags": [
+        "Tasks"
+      ],
+      "summary": "Update assignment, due date, or task content.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "tasks.manage",
+        "predicate": "Active tenant membership plus named predicate: Assigned member cannot change assignee, requirement, or approval decision.",
+        "predicateId": "tasks.manage"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "TaskIdParamsV1",
+        "querySchema": null,
+        "bodySchema": "UpdateTaskBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "TaskResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "conditional-update-precondition",
+        "rule": "conditional update requires task status and updated_at to match the loaded row."
+      },
+      "audit": {
+        "event": "TASK_ASSIGNED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/tasks/:id/start",
+      "operationId": "taskStart",
+      "tags": [
+        "Tasks"
+      ],
+      "summary": "Mark task in progress.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "tasks.update_assigned",
+        "predicate": "Active tenant membership plus named predicate: Assigned member or task manager; state TODO/REJECTED.",
+        "predicateId": "tasks.update_assigned"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "TaskIdParamsV1",
+        "querySchema": null,
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "TaskResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "conditional-update-precondition",
+        "rule": "conditional update requires the loaded task status to remain unchanged."
+      },
+      "audit": {
+        "event": "TASK_STARTED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/tasks/:id/submit-evidence",
+      "operationId": "taskSubmitEvidence",
+      "tags": [
+        "Tasks"
+      ],
+      "summary": "Submit one or more evidence versions to a task.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "tasks.submit_assigned",
+        "predicate": "Active tenant membership plus named predicate: Assigned member or task manager; submitted evidence remains subject to separate evidence/mapping review.",
+        "predicateId": "tasks.submit_assigned"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "TaskIdParamsV1",
+        "querySchema": null,
+        "bodySchema": "SubmitTaskEvidenceBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "TaskResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "conditional-update-precondition",
+        "rule": "task evidence upsert is idempotent and status transition requires the loaded task status to remain unchanged."
+      },
+      "audit": {
+        "event": "TASK_SUBMITTED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/tasks/:id/complete",
+      "operationId": "taskComplete",
+      "tags": [
+        "Tasks"
+      ],
+      "summary": "Complete task request without approving evidence or mappings.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "tasks.review",
+        "predicate": "Active tenant membership plus named predicate: OWNER, ADMIN, or COMPLIANCE_MANAGER; task has submitted evidence unless administrative_only.",
+        "predicateId": "tasks.review"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "TaskIdParamsV1",
+        "querySchema": null,
+        "bodySchema": "CompleteTaskBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "TaskResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "Not replayable without a fresh state read; clients receive 409 when the expected state changed."
+      },
+      "concurrency": {
+        "strategy": "conditional-update-precondition",
+        "rule": "conditional update requires task.status=SUBMITTED and submitted evidence remains present unless administrative_only=true."
+      },
+      "audit": {
+        "event": "TASK_COMPLETED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/tasks/:id/reject",
+      "operationId": "taskReject",
+      "tags": [
+        "Tasks"
+      ],
+      "summary": "Reject task submission for correction.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "tasks.review",
+        "predicate": "Active tenant membership plus named predicate: OWNER, ADMIN, or COMPLIANCE_MANAGER; rejection reason required.",
+        "predicateId": "tasks.review"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "TaskIdParamsV1",
+        "querySchema": null,
+        "bodySchema": "RejectTaskBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "TaskResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "Not replayable without a fresh state read; clients receive 409 when the expected state changed."
+      },
+      "concurrency": {
+        "strategy": "conditional-update-precondition",
+        "rule": "conditional update requires task.status=SUBMITTED."
+      },
+      "audit": {
+        "event": "TASK_REJECTED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/tasks/:id/cancel",
+      "operationId": "taskCancel",
+      "tags": [
+        "Tasks"
+      ],
+      "summary": "Cancel task with reason.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "tasks.manage",
+        "predicate": "Task manager in active tenant.",
+        "predicateId": "tasks.manage"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "TaskIdParamsV1",
+        "querySchema": null,
+        "bodySchema": "CancelTaskBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "TaskResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "conditional-update-precondition",
+        "rule": "conditional update requires the loaded non-terminal task status to remain unchanged."
+      },
+      "audit": {
+        "event": "TASK_CANCELLED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/comments",
+      "operationId": "commentsList",
+      "tags": [
+        "Comments"
+      ],
+      "summary": "List comments for authorized entity.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "comments.read",
+        "predicate": "Entity authorization checked by tenant scope and resource permissions.",
+        "predicateId": "comments.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": null,
+        "querySchema": "CommentListQueryV1",
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "CommentListResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing services validate current state and tenant scope before mutation."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/comments",
+      "operationId": "commentCreate",
+      "tags": [
+        "Comments"
+      ],
+      "summary": "Create comment on authorized entity.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "comments.create",
+        "predicate": "Active tenant membership and entity access.",
+        "predicateId": "comments.create"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": null,
+        "querySchema": null,
+        "bodySchema": "CreateCommentBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 201,
+        "schema": "CommentResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing service validates tenant scope and current state; Pass 28 requires future mutations to use conditional update guards when the route changes workflow state."
+      },
+      "audit": {
+        "event": "COMMENT_CREATED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "PATCH",
+      "path": "/api/comments/:id",
+      "operationId": "commentUpdate",
+      "tags": [
+        "Comments"
+      ],
+      "summary": "Edit own or otherwise authorized comment.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "comments.update",
+        "predicate": "Active tenant membership plus named predicate: Own comment or comment management permission.",
+        "predicateId": "comments.update"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "CommentIdParamsV1",
+        "querySchema": null,
+        "bodySchema": "UpdateCommentBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "CommentResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing service validates tenant scope and current state; Pass 28 requires future mutations to use conditional update guards when the route changes workflow state."
+      },
+      "audit": {
+        "event": "COMMENT_UPDATED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "DELETE",
+      "path": "/api/comments/:id",
+      "operationId": "commentArchive",
+      "tags": [
+        "Comments"
+      ],
+      "summary": "Archive/remove comment according to policy.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "comments.delete",
+        "predicate": "Active tenant membership plus named predicate: Own comment or comment management permission.",
+        "predicateId": "comments.delete"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "CommentIdParamsV1",
+        "querySchema": null,
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 204,
+        "schema": "NoContent",
+        "envelope": false
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing service validates tenant scope and current state; Pass 28 requires future mutations to use conditional update guards when the route changes workflow state."
+      },
+      "audit": {
+        "event": "COMMENT_ARCHIVED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/dashboard/overview",
+      "operationId": "dashboardOverview",
+      "tags": [
+        "Dashboard"
+      ],
+      "summary": "Readiness and key metrics overview.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "dashboard.read",
+        "predicate": "Active tenant membership; metrics derived from tenant-scoped data only.",
+        "predicateId": "dashboard.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": null,
+        "querySchema": "DashboardQueryV1",
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "DashboardOverviewResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "read-consistent-calculation",
+        "rule": "Readiness recomputes expiry and mapping/evidence validity at calculation time."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/dashboard/readiness-trace",
+      "operationId": "dashboardReadinessTrace",
+      "tags": [
+        "Dashboard"
+      ],
+      "summary": "Explain readiness from applicable evidence-based controls, requirements, approved mappings, current evidence versions, and validity decisions.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "dashboard.read",
+        "predicate": "Active tenant membership; readiness trace loads enrollment/control/evidence data inside tenant scope and excludes foreign identifiers.",
+        "predicateId": "dashboard.readiness_trace"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": null,
+        "querySchema": "DashboardQueryV1",
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "ReadinessTraceResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "Read-only trace; clients may retry. No Idempotency-Key support required."
+      },
+      "concurrency": {
+        "strategy": "read-consistent-calculation",
+        "rule": "Readiness trace recomputes expiry, supersession, archive, mapping approval, and evidence approval at calculation time."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/dashboard/control-progress",
+      "operationId": "dashboardControlProgress",
+      "tags": [
+        "Dashboard"
+      ],
+      "summary": "Coverage by control/category.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "dashboard.read",
+        "predicate": "Active tenant membership; metrics derived from tenant-scoped data only.",
+        "predicateId": "dashboard.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": null,
+        "querySchema": "DashboardQueryV1",
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "DashboardControlProgressResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "read-consistent-calculation",
+        "rule": "Readiness recomputes expiry and mapping/evidence validity at calculation time."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/dashboard/missing-evidence",
+      "operationId": "dashboardMissingEvidence",
+      "tags": [
+        "Dashboard"
+      ],
+      "summary": "Unsatisfied required requirements.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "dashboard.read",
+        "predicate": "Active tenant membership; metrics derived from tenant-scoped data only.",
+        "predicateId": "dashboard.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": null,
+        "querySchema": "DashboardQueryV1",
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "MissingEvidenceResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "read-consistent-calculation",
+        "rule": "Readiness recomputes expiry and mapping/evidence validity at calculation time."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/dashboard/overdue-tasks",
+      "operationId": "dashboardOverdueTasks",
+      "tags": [
+        "Dashboard"
+      ],
+      "summary": "Open overdue tasks.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "dashboard.read",
+        "predicate": "Active tenant membership; metrics derived from tenant-scoped data only.",
+        "predicateId": "dashboard.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": null,
+        "querySchema": "DashboardQueryV1",
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "OverdueTasksResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "read-consistent-calculation",
+        "rule": "Readiness recomputes expiry and mapping/evidence validity at calculation time."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/dashboard/expiring-evidence",
+      "operationId": "dashboardExpiringEvidence",
+      "tags": [
+        "Dashboard"
+      ],
+      "summary": "Evidence nearing expiry.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "dashboard.read",
+        "predicate": "Active tenant membership; metrics derived from tenant-scoped data only.",
+        "predicateId": "dashboard.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": null,
+        "querySchema": "DashboardQueryV1",
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "ExpiringEvidenceResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "read-consistent-calculation",
+        "rule": "Readiness recomputes expiry and mapping/evidence validity at calculation time."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/reports",
+      "operationId": "reportGenerate",
+      "tags": [
+        "Reports"
+      ],
+      "summary": "Generate versioned JSON/CSV report.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "reports.generate",
+        "predicate": "OWNER, ADMIN, or COMPLIANCE_MANAGER in active tenant.",
+        "predicateId": "reports.generate"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes",
+          "Idempotency-Key optional"
+        ],
+        "pathSchema": null,
+        "querySchema": null,
+        "bodySchema": "GenerateReportBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 201,
+        "schema": "ReportResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": true,
+        "rule": "Idempotency-Key or replay-safe state check returns the existing committed result within tenant scope; conflicting in-flight state returns 409.",
+        "header": "Idempotency-Key",
+        "scope": "tenant + method + path + authenticated actor + Idempotency-Key"
+      },
+      "concurrency": {
+        "strategy": "conditional-update-precondition",
+        "rule": "Idempotency-Key scoped by company+user; unique conflicts replay the existing report result."
+      },
+      "audit": {
+        "event": "REPORT_GENERATED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "report"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/reports",
+      "operationId": "reportsList",
+      "tags": [
+        "Reports"
+      ],
+      "summary": "List generated report records.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "reports.read",
+        "predicate": "Active tenant membership; reports are tenant-scoped.",
+        "predicateId": "reports.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": null,
+        "querySchema": "ReportListQueryV1",
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "ReportListResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing services validate current state and tenant scope before mutation."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/reports/:id",
+      "operationId": "reportDetail",
+      "tags": [
+        "Reports"
+      ],
+      "summary": "Read report metadata/status.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "reports.read",
+        "predicate": "Report loaded inside active tenant scope.",
+        "predicateId": "reports.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "ReportIdParamsV1",
+        "querySchema": null,
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "ReportResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing services validate current state and tenant scope before mutation."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/reports/:id/download",
+      "operationId": "reportDownload",
+      "tags": [
+        "Reports"
+      ],
+      "summary": "Authorized report download.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "reports.read",
+        "predicate": "Report loaded inside active tenant scope; generated report must be completed.",
+        "predicateId": "reports.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "ReportIdParamsV1",
+        "querySchema": null,
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "ReportDownloadV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "service-layer-state-validation",
+        "rule": "State-changing services validate current state and tenant scope before mutation."
+      },
+      "audit": {
+        "event": "REPORT_DOWNLOADED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "download"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/audit-logs",
+      "operationId": "auditLogsList",
+      "tags": [
+        "AuditLogs"
+      ],
+      "summary": "Authorized append-only audit event history.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "audit_logs.read",
+        "predicate": "Active tenant membership plus named predicate: OWNER, ADMIN, COMPLIANCE_MANAGER; AUDITOR only through future explicit grant and filtered projection.",
+        "predicateId": "audit_logs.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": null,
+        "querySchema": "AuditLogListQueryV1",
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "AuditLogListResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; clients may safely retry only idempotent read operations."
+      },
+      "concurrency": {
+        "strategy": "append-only-read",
+        "rule": "No update/delete route exists for audit logs."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/companies/current/ai-settings",
+      "operationId": "getCompanyAiSettings",
+      "tags": [
+        "AI"
+      ],
+      "summary": "Read company AI settings without exposing provider secrets.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "company.read",
+        "predicate": "Active tenant membership and company.read.",
+        "predicateId": "company.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": null,
+        "querySchema": null,
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "AiSettingsResponse",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; operation may be retried only after checking current resource state."
+      },
+      "concurrency": {
+        "strategy": "service preconditions",
+        "rule": "Read-only operation."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "PATCH",
+      "path": "/api/companies/current/ai-settings",
+      "operationId": "updateCompanyAiSettings",
+      "tags": [
+        "AI"
+      ],
+      "summary": "Enable or disable company AI assistance and restricted-evidence AI policy.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "company.update",
+        "predicate": "Active tenant membership plus company.update.",
+        "predicateId": "company.update"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": null,
+        "querySchema": null,
+        "bodySchema": "AiSettingsBody",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "AiSettingsResponse",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; operation may be retried only after checking current resource state."
+      },
+      "concurrency": {
+        "strategy": "service preconditions",
+        "rule": "Service loads the target entity inside tenant scope and validates current state before mutation."
+      },
+      "audit": {
+        "event": "AI_SETTINGS_UPDATED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/evidence/versions/:versionId/ai-analyses",
+      "operationId": "listEvidenceAiAnalyses",
+      "tags": [
+        "AI"
+      ],
+      "summary": "List provenance-tracked AI analyses for one tenant-scoped evidence version.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "ai.read",
+        "predicate": "Active tenant membership plus ai.read; evidence version loaded only inside tenant scope.",
+        "predicateId": "ai.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "EvidenceVersionAiParamsSchema",
+        "querySchema": null,
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "AiAnalysisListResponse",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; operation may be retried only after checking current resource state."
+      },
+      "concurrency": {
+        "strategy": "service preconditions",
+        "rule": "Read-only operation."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/evidence/versions/:versionId/run-ai-analysis",
+      "operationId": "runEvidenceAiAnalysis",
+      "tags": [
+        "AI"
+      ],
+      "summary": "Run optional advisory AI analysis for one evidence version; creates suggested mappings only and never approves readiness.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "ai.run",
+        "predicate": "Active tenant membership plus ai.run; evidence version loaded inside tenant scope; company AI setting must be enabled.",
+        "predicateId": "ai.run"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "EvidenceVersionAiParamsSchema",
+        "querySchema": null,
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "AiAnalysisRunResponse",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support; operation may be retried only after checking current resource state."
+      },
+      "concurrency": {
+        "strategy": "service preconditions",
+        "rule": "Service loads the target entity inside tenant scope and validates current state before mutation."
+      },
+      "audit": {
+        "event": "AI_ANALYSIS_REQUESTED, AI_ANALYSIS_COMPLETED, AI_ANALYSIS_FAILED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "ai"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/jobs/status",
+      "operationId": "getJobsStatus",
+      "tags": [
+        "Jobs"
+      ],
+      "summary": "Read bounded background queue status for operational users.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "jobs.manage",
+        "predicate": "Active tenant membership plus jobs.manage; target entities are loaded only inside tenant scope.",
+        "predicateId": "jobs.manage"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": null,
+        "querySchema": null,
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "JobsStatusResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "Queue deduplication uses deterministic job IDs or notification deduplication keys; external Idempotency-Key is not accepted for this route."
+      },
+      "concurrency": {
+        "strategy": "service preconditions",
+        "rule": "Service validates tenant scope and current state before mutation or queue enqueue."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/jobs/maintenance/run",
+      "operationId": "runMaintenanceJob",
+      "tags": [
+        "Jobs"
+      ],
+      "summary": "Run or enqueue a bounded maintenance job such as expiry, reminders, cleanup, or reconciliation.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "jobs.manage",
+        "predicate": "Active tenant membership plus jobs.manage; target entities are loaded only inside tenant scope.",
+        "predicateId": "jobs.manage"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": null,
+        "querySchema": null,
+        "bodySchema": "RunMaintenanceJobBodySchema",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "RunMaintenanceJobResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "Queue deduplication uses deterministic job IDs or notification deduplication keys; external Idempotency-Key is not accepted for this route."
+      },
+      "concurrency": {
+        "strategy": "service preconditions",
+        "rule": "Service validates tenant scope and current state before mutation or queue enqueue."
+      },
+      "audit": {
+        "event": "JOB_ENQUEUED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/notifications",
+      "operationId": "listNotifications",
+      "tags": [
+        "Notifications"
+      ],
+      "summary": "List current user notifications without exposing evidence attachments or storage secrets.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "notifications.read",
+        "predicate": "Active tenant membership plus notifications.read; target entities are loaded only inside tenant scope.",
+        "predicateId": "notifications.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": null,
+        "querySchema": "NotificationListQuerySchema",
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "NotificationListResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "Queue deduplication uses deterministic job IDs or notification deduplication keys; external Idempotency-Key is not accepted for this route."
+      },
+      "concurrency": {
+        "strategy": "service preconditions",
+        "rule": "Service validates tenant scope and current state before mutation or queue enqueue."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/notifications/:id/read",
+      "operationId": "markNotificationRead",
+      "tags": [
+        "Notifications"
+      ],
+      "summary": "Mark one tenant-scoped notification as read.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "notifications.read",
+        "predicate": "Active tenant membership plus notifications.read; target entities are loaded only inside tenant scope.",
+        "predicateId": "notifications.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": "NotificationIdParamsSchema",
+        "querySchema": null,
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "NotificationResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "Queue deduplication uses deterministic job IDs or notification deduplication keys; external Idempotency-Key is not accepted for this route."
+      },
+      "concurrency": {
+        "strategy": "service preconditions",
+        "rule": "Service validates tenant scope and current state before mutation or queue enqueue."
+      },
+      "audit": {
+        "event": "NOTIFICATION_READ",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/auditor-access/grants",
+      "operationId": "listAuditorAccessGrants",
+      "tags": [
+        "Auditor Access"
+      ],
+      "summary": "List time-bounded auditor access grants for selected controls, approved evidence, and reports.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "auditor_grants.manage",
+        "predicate": "Active tenant membership plus auditor_grants.manage; grants are scoped by company_id and never by request body alone.",
+        "predicateId": "auditor_grants.manage"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "contentType": "application/json",
+        "pathSchema": null,
+        "querySchema": "AuditorAccessListQuerySchema",
+        "bodySchema": null
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "AuditorAccessGrantListResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "Read-only route; no idempotency key accepted."
+      },
+      "concurrency": {
+        "strategy": "tenant-scoped read",
+        "rule": "Only current tenant grants are returned."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/auditor-access/my-grants",
+      "operationId": "listMyAuditorAccessGrants",
+      "tags": [
+        "Auditor Access"
+      ],
+      "summary": "List active grants for the current auditor membership.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "auditor_grants.read",
+        "predicate": "AUDITOR role plus auditor_grants.read; auditors only read their own active unexpired unrevoked grants.",
+        "predicateId": "auditor_grants.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "contentType": "application/json",
+        "pathSchema": null,
+        "querySchema": null,
+        "bodySchema": null
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "AuditorAccessMyGrantListResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "Read-only route; no idempotency key accepted."
+      },
+      "concurrency": {
+        "strategy": "tenant-scoped read",
+        "rule": "Only active grants for the current membership are returned."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/auditor-access/grants",
+      "operationId": "createAuditorAccessGrant",
+      "tags": [
+        "Auditor Access"
+      ],
+      "summary": "Create a bounded read-only auditor grant for a selected framework, control, approved evidence, or completed report.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "auditor_grants.manage",
+        "predicate": "OWNER, ADMIN, or COMPLIANCE_MANAGER with auditor_grants.manage; auditor member and scope loaded inside tenant scope.",
+        "predicateId": "auditor_grants.manage"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "contentType": "application/json",
+        "pathSchema": null,
+        "querySchema": null,
+        "bodySchema": "CreateAuditorAccessGrantBodySchema"
+      },
+      "successResponse": {
+        "status": 201,
+        "schema": "AuditorAccessGrantResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "Duplicate active grant for company + auditor member + scope is rejected with 409."
+      },
+      "concurrency": {
+        "strategy": "database unique partial index plus service preconditions",
+        "rule": "Active duplicate grant is blocked; scope and auditor membership are validated before create."
+      },
+      "audit": {
+        "event": "AUDITOR_ACCESS_GRANTED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "DELETE",
+      "path": "/api/auditor-access/grants/:grantId",
+      "operationId": "revokeAuditorAccessGrant",
+      "tags": [
+        "Auditor Access"
+      ],
+      "summary": "Revoke a time-bounded auditor access grant immediately.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "auditor_grants.manage",
+        "predicate": "Active tenant membership plus auditor_grants.manage; grant loaded inside tenant scope.",
+        "predicateId": "auditor_grants.manage"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes",
+          "Idempotency-Key optional"
+        ],
+        "contentType": "application/json",
+        "pathSchema": "AuditorGrantIdParamsSchema",
+        "querySchema": null,
+        "bodySchema": null
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "AuditorAccessGrantResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": true,
+        "rule": "Idempotency-Key or replay-safe state check returns the existing committed result within tenant scope; conflicting in-flight state returns 409.",
+        "header": "Idempotency-Key",
+        "scope": "tenant + method + path + authenticated actor + Idempotency-Key"
+      },
+      "concurrency": {
+        "strategy": "conditional-update-precondition",
+        "rule": "conditional update requires revoked_at to remain null; replay of already revoked grant is safe."
+      },
+      "audit": {
+        "event": "AUDITOR_ACCESS_REVOKED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/retention/policy",
+      "operationId": "getRetentionPolicy",
+      "tags": [
+        "Retention"
+      ],
+      "summary": "Return tenant-visible retention deletion legal-hold and purge policy disclosure.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "retention.read",
+        "predicate": "Active tenant membership plus retention.read; requests loaded by company_id only.",
+        "predicateId": "retention.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "contentType": "application/json",
+        "pathSchema": null,
+        "querySchema": null,
+        "bodySchema": null
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "RetentionPolicyResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key accepted; service checks tenant-scoped state before mutation."
+      },
+      "concurrency": {
+        "strategy": "read-only-policy-disclosure",
+        "rule": "Policy disclosure is read-only and does not change purge state."
+      },
+      "audit": {
+        "event": "none",
+        "rule": "Read-only route; no audit event."
+      },
+      "rateLimit": {
+        "policy": "standard-authenticated"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/retention/deletion-requests",
+      "operationId": "listDeletionRequests",
+      "tags": [
+        "Retention"
+      ],
+      "summary": "List tenant-scoped policy-controlled deletion requests.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "retention.read",
+        "predicate": "Active tenant membership plus retention.read; requests loaded by company_id only.",
+        "predicateId": "retention.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "contentType": "application/json",
+        "pathSchema": null,
+        "querySchema": "DeletionRequestListQuerySchema",
+        "bodySchema": null
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "DeletionRequestListResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key accepted; service checks tenant-scoped state before mutation."
+      },
+      "concurrency": {
+        "strategy": "state precondition + tenant-scoped transaction",
+        "rule": "Service loads target in company scope, validates current status/legal hold state, and writes audit events in the same transaction where feasible."
+      },
+      "audit": {
+        "event": "none",
+        "rule": "Read-only route; no audit event."
+      },
+      "rateLimit": {
+        "policy": "standard-authenticated"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/retention/deletion-requests",
+      "operationId": "createDeletionRequest",
+      "tags": [
+        "Retention"
+      ],
+      "summary": "Request archive-first policy-controlled purge for a supported entity.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "retention.manage",
+        "predicate": "OWNER or ADMIN with retention.manage; target entity loaded in tenant scope, backup limitation acknowledged, legal hold absent, and active duplicate request blocked.",
+        "predicateId": "retention.manage"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "contentType": "application/json",
+        "pathSchema": null,
+        "querySchema": null,
+        "bodySchema": "CreateDeletionRequestBodySchema"
+      },
+      "successResponse": {
+        "status": 201,
+        "schema": "DeletionRequestResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key accepted; service checks tenant-scoped state before mutation."
+      },
+      "concurrency": {
+        "strategy": "state precondition + tenant-scoped transaction",
+        "rule": "Service loads target in company scope, validates current status/legal hold state, and writes audit events in the same transaction where feasible."
+      },
+      "audit": {
+        "event": "DELETION_REQUESTED",
+        "rule": "Important retention/deletion/legal-hold mutation writes an audit event; reads write no event."
+      },
+      "rateLimit": {
+        "policy": "standard-authenticated"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/retention/deletion-requests/:deletionRequestId/approve",
+      "operationId": "approveDeletionRequest",
+      "tags": [
+        "Retention"
+      ],
+      "summary": "Approve and schedule a deletion request after the required waiting period.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "retention.manage",
+        "predicate": "OWNER or ADMIN with retention.manage; request loaded in tenant scope; active legal hold blocks approval; requester self-approval is forbidden.",
+        "predicateId": "retention.manage"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "contentType": "application/json",
+        "pathSchema": "DeletionRequestIdParamsSchema",
+        "querySchema": null,
+        "bodySchema": "ApproveDeletionRequestBodySchema"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "DeletionRequestResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "Not replayable without a fresh state read; clients receive 409 when the expected state changed."
+      },
+      "concurrency": {
+        "strategy": "conditional-update-precondition",
+        "rule": "Approval uses a conditional state precondition, enforces separate authorized approver, applies the minimum purge waiting period, and records DELETION_APPROVED."
+      },
+      "audit": {
+        "event": "DELETION_APPROVED",
+        "rule": "Important retention/deletion/legal-hold mutation writes an audit event; reads write no event."
+      },
+      "rateLimit": {
+        "policy": "standard-authenticated"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/retention/deletion-requests/:deletionRequestId/cancel",
+      "operationId": "cancelDeletionRequest",
+      "tags": [
+        "Retention"
+      ],
+      "summary": "Cancel an open deletion request before it runs.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "retention.manage",
+        "predicate": "OWNER or ADMIN with retention.manage; request loaded in tenant scope and must not be running/completed.",
+        "predicateId": "retention.manage"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes",
+          "Idempotency-Key optional"
+        ],
+        "contentType": "application/json",
+        "pathSchema": "DeletionRequestIdParamsSchema",
+        "querySchema": null,
+        "bodySchema": "CancelDeletionRequestBodySchema"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "DeletionRequestResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": true,
+        "rule": "Idempotency-Key or replay-safe state check returns the existing committed result within tenant scope; conflicting in-flight state returns 409.",
+        "header": "Idempotency-Key",
+        "scope": "tenant + method + path + authenticated actor + Idempotency-Key"
+      },
+      "concurrency": {
+        "strategy": "conditional-update-precondition",
+        "rule": "conditional update requires deletion request status to match the loaded non-running state."
+      },
+      "audit": {
+        "event": "DELETION_CANCELLED",
+        "rule": "Important retention/deletion/legal-hold mutation writes an audit event; reads write no event."
+      },
+      "rateLimit": {
+        "policy": "standard-authenticated"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/retention/deletion-requests/run-due",
+      "operationId": "runDueDeletionRequests",
+      "tags": [
+        "Retention",
+        "Jobs"
+      ],
+      "summary": "Run due scheduled deletion requests through the controlled background purge workflow.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "jobs.manage",
+        "predicate": "Active tenant membership plus jobs.manage; only due scheduled requests inside tenant scope are processed.",
+        "predicateId": "jobs.manage"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "contentType": "application/json",
+        "pathSchema": null,
+        "querySchema": null,
+        "bodySchema": null
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "RunDueDeletionRequestsResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "Not replayable without a fresh state read; clients receive 409 when the expected state changed."
+      },
+      "concurrency": {
+        "strategy": "conditional-update-precondition",
+        "rule": "Executor claims SCHEDULED rows by conditional update to RUNNING before purge, blocks active legal holds, redacts active content while preserving accountability records, and completes RUNNING rows atomically."
+      },
+      "audit": {
+        "event": "DELETION_COMPLETED",
+        "rule": "Each completed purge writes DELETION_COMPLETED with purge-policy and backup-limitation metadata."
+      },
+      "rateLimit": {
+        "policy": "standard-authenticated"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/retention/legal-holds",
+      "operationId": "listLegalHolds",
+      "tags": [
+        "Retention"
+      ],
+      "summary": "List active or historical legal holds.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "retention.read",
+        "predicate": "Active tenant membership plus retention.read; holds loaded by company_id only.",
+        "predicateId": "retention.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "contentType": "application/json",
+        "pathSchema": null,
+        "querySchema": "LegalHoldListQuerySchema",
+        "bodySchema": null
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "LegalHoldListResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key accepted; service checks tenant-scoped state before mutation."
+      },
+      "concurrency": {
+        "strategy": "state precondition + tenant-scoped transaction",
+        "rule": "Service loads target in company scope, validates current status/legal hold state, and writes audit events in the same transaction where feasible."
+      },
+      "audit": {
+        "event": "none",
+        "rule": "Read-only route; no audit event."
+      },
+      "rateLimit": {
+        "policy": "standard-authenticated"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/retention/legal-holds",
+      "operationId": "createLegalHold",
+      "tags": [
+        "Retention"
+      ],
+      "summary": "Place a company-wide or entity-specific legal hold that blocks purge.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "retention.manage",
+        "predicate": "OWNER or ADMIN with retention.manage; optional target entity loaded in tenant scope.",
+        "predicateId": "retention.manage"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "contentType": "application/json",
+        "pathSchema": null,
+        "querySchema": null,
+        "bodySchema": "CreateLegalHoldBodySchema"
+      },
+      "successResponse": {
+        "status": 201,
+        "schema": "LegalHoldResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key accepted; service checks tenant-scoped state before mutation."
+      },
+      "concurrency": {
+        "strategy": "state precondition + tenant-scoped transaction",
+        "rule": "Service loads target in company scope, validates current status/legal hold state, and writes audit events in the same transaction where feasible."
+      },
+      "audit": {
+        "event": "LEGAL_HOLD_PLACED",
+        "rule": "Important retention/deletion/legal-hold mutation writes an audit event; reads write no event."
+      },
+      "rateLimit": {
+        "policy": "standard-authenticated"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/retention/legal-holds/:legalHoldId/release",
+      "operationId": "releaseLegalHold",
+      "tags": [
+        "Retention"
+      ],
+      "summary": "Release an active legal hold.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "retention.manage",
+        "predicate": "OWNER or ADMIN with retention.manage; legal hold loaded in tenant scope.",
+        "predicateId": "retention.manage"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes",
+          "Idempotency-Key optional"
+        ],
+        "contentType": "application/json",
+        "pathSchema": "LegalHoldIdParamsSchema",
+        "querySchema": null,
+        "bodySchema": null
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "LegalHoldResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": true,
+        "rule": "Idempotency-Key or replay-safe state check returns the existing committed result within tenant scope; conflicting in-flight state returns 409.",
+        "header": "Idempotency-Key",
+        "scope": "tenant + method + path + authenticated actor + Idempotency-Key"
+      },
+      "concurrency": {
+        "strategy": "conditional-update-precondition",
+        "rule": "conditional update requires released_at to remain null; replay of already released hold is safe."
+      },
+      "audit": {
+        "event": "LEGAL_HOLD_RELEASED",
+        "rule": "Important retention/deletion/legal-hold mutation writes an audit event; reads write no event."
+      },
+      "rateLimit": {
+        "policy": "standard-authenticated"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/frameworks/enrollments/:enrollmentId/upgrade-preview",
+      "operationId": "frameworkUpgradePreview",
+      "tags": [
+        "Frameworks"
+      ],
+      "summary": "Create a same-family framework upgrade reconciliation draft and preview stable-code matches.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "frameworks.enable",
+        "predicate": "OWNER, ADMIN, or COMPLIANCE_MANAGER in active tenant; old enrollment must be ACTIVE and scoped to tenant.",
+        "predicateId": "frameworks.enable"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id required",
+          "x-csrf-token required"
+        ],
+        "pathSchema": "FrameworkUpgradePreviewParamsV1",
+        "querySchema": null,
+        "bodySchema": "FrameworkUpgradePreviewBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 201,
+        "schema": "FrameworkUpgradePreviewResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "No Idempotency-Key support in Pass 24; duplicate open draft for same company/framework family returns 409."
+      },
+      "concurrency": {
+        "strategy": "transactional-status-precondition",
+        "rule": "Creates DRAFT_RECONCILIATION only when old enrollment is ACTIVE and no draft exists for the same company/framework family."
+      },
+      "audit": {
+        "event": "FRAMEWORK_UPGRADE_STARTED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/frameworks/enrollments/:draftEnrollmentId/reconciliation",
+      "operationId": "frameworkUpgradeReconciliationDetail",
+      "tags": [
+        "Frameworks"
+      ],
+      "summary": "Read a framework upgrade reconciliation preview and candidate mappings.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "frameworks.enable",
+        "predicate": "OWNER, ADMIN, or COMPLIANCE_MANAGER in active tenant; draft enrollment must belong to selected tenant.",
+        "predicateId": "frameworks.enable"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id required"
+        ],
+        "pathSchema": "FrameworkUpgradeDraftParamsV1",
+        "querySchema": null,
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "FrameworkUpgradeReconciliationResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "Read-only endpoint; clients may safely retry."
+      },
+      "concurrency": {
+        "strategy": "tenant-scoped-read",
+        "rule": "Reads reconciliation state current at request time; activation uses separate transactional preconditions."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/frameworks/enrollments/:draftEnrollmentId/activate-upgrade",
+      "operationId": "frameworkUpgradeActivate",
+      "tags": [
+        "Frameworks"
+      ],
+      "summary": "Atomically activate a reviewed framework upgrade and end the prior same-family enrollment.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "frameworks.enable",
+        "predicate": "OWNER, ADMIN, or COMPLIANCE_MANAGER in active tenant; reconciliation must be OPEN/REVIEWED and draft enrollment must be DRAFT_RECONCILIATION.",
+        "predicateId": "frameworks.enable"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id required",
+          "x-csrf-token required"
+        ],
+        "pathSchema": "FrameworkUpgradeDraftParamsV1",
+        "querySchema": null,
+        "bodySchema": "FrameworkUpgradeActivateBodyV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "FrameworkUpgradeActivationResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "Not replayable without a fresh state read; clients receive 409 when the expected state changed."
+      },
+      "concurrency": {
+        "strategy": "conditional-update-precondition",
+        "rule": "single transaction conditionally ENDS old ACTIVE enrollment, ACTIVATES DRAFT_RECONCILIATION enrollment, copies mappings only once, and marks reconciliation ACTIVATED once."
+      },
+      "audit": {
+        "event": "FRAMEWORK_UPGRADED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/auditor-grants",
+      "operationId": "listCanonicalAuditorGrants",
+      "tags": [
+        "Auditor Access"
+      ],
+      "summary": "List time-bounded auditor access grants using the canonical v2.1 route.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "auditor_grants.manage",
+        "predicate": "Active tenant membership plus auditor_grants.manage; grants are scoped by company_id.",
+        "predicateId": "auditor_grants.manage"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "contentType": "application/json",
+        "pathSchema": null,
+        "querySchema": "AuditorAccessListQuerySchema",
+        "bodySchema": null
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "AuditorAccessGrantListResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "Read-only route; no idempotency key accepted."
+      },
+      "concurrency": {
+        "strategy": "tenant-scoped read",
+        "rule": "Only current active tenant grants or selected auditor-visible resources are returned."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/auditor-grants",
+      "operationId": "createCanonicalAuditorGrant",
+      "tags": [
+        "Auditor Access"
+      ],
+      "summary": "Create a bounded read-only auditor grant using the canonical v2.1 route.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "auditor_grants.manage",
+        "predicate": "OWNER, ADMIN, or COMPLIANCE_MANAGER with auditor_grants.manage; auditor member and scope loaded inside tenant scope.",
+        "predicateId": "auditor_grants.manage"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "contentType": "application/json",
+        "pathSchema": null,
+        "querySchema": null,
+        "bodySchema": "CreateAuditorAccessGrantBodySchema"
+      },
+      "successResponse": {
+        "status": 201,
+        "schema": "AuditorAccessGrantResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "Duplicate active grant for company + auditor member + scope is rejected with 409."
+      },
+      "concurrency": {
+        "strategy": "database unique partial index plus service preconditions",
+        "rule": "Active duplicate grant is blocked; scope and auditor membership are validated inside tenant scope before create."
+      },
+      "audit": {
+        "event": "AUDITOR_ACCESS_GRANTED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "POST",
+      "path": "/api/auditor-grants/:grantId/revoke",
+      "operationId": "revokeCanonicalAuditorGrant",
+      "tags": [
+        "Auditor Access"
+      ],
+      "summary": "Revoke a time-bounded auditor grant immediately using the canonical v2.1 route.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "auditor_grants.manage",
+        "predicate": "Active tenant membership plus auditor_grants.manage; grant loaded inside tenant scope.",
+        "predicateId": "auditor_grants.manage"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes",
+          "Idempotency-Key optional"
+        ],
+        "contentType": "application/json",
+        "pathSchema": "AuditorGrantIdParamsSchema",
+        "querySchema": null,
+        "bodySchema": null
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "AuditorAccessGrantResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": true,
+        "header": "Idempotency-Key",
+        "rule": "Replay-safe revoke returns the existing revoked result within tenant scope; conflicting in-flight state returns 409.",
+        "scope": "tenant + method + path + authenticated actor + Idempotency-Key"
+      },
+      "concurrency": {
+        "strategy": "conditional-update-precondition",
+        "rule": "conditional update requires revoked_at to remain null; replay of already revoked grant is safe."
+      },
+      "audit": {
+        "event": "AUDITOR_ACCESS_REVOKED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/auditor-view/controls",
+      "operationId": "listAuditorViewControls",
+      "tags": [
+        "Auditor View"
+      ],
+      "summary": "List only controls selected by active time-bounded auditor grants.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "auditor_grants.read",
+        "predicate": "AUDITOR role plus active unexpired unrevoked grant covering framework/control/evidence-derived controls.",
+        "predicateId": "auditor.active_scope_grant"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "contentType": "application/json",
+        "pathSchema": null,
+        "querySchema": "AuditorViewListQuerySchema",
+        "bodySchema": null
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "AuditorViewControlListResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "Read-only route; no idempotency key accepted."
+      },
+      "concurrency": {
+        "strategy": "tenant-scoped read",
+        "rule": "Only current active tenant grants or selected auditor-visible resources are returned."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/auditor-view/evidence",
+      "operationId": "listAuditorViewEvidence",
+      "tags": [
+        "Auditor View"
+      ],
+      "summary": "List only approved evidence selected by active time-bounded auditor grants.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "evidence.read",
+        "predicate": "AUDITOR role plus active unexpired unrevoked grant; only approved/current-approved evidence and approved mappings are returned; downloads additionally require download_allowed=true.",
+        "predicateId": "auditor.active_scope_grant"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "contentType": "application/json",
+        "pathSchema": null,
+        "querySchema": "AuditorViewListQuerySchema",
+        "bodySchema": null
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "AuditorViewEvidenceListResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "Read-only route; no idempotency key accepted."
+      },
+      "concurrency": {
+        "strategy": "tenant-scoped read",
+        "rule": "Only current active tenant grants or selected auditor-visible resources are returned."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/auditor-view/reports",
+      "operationId": "listAuditorViewReports",
+      "tags": [
+        "Auditor View"
+      ],
+      "summary": "List only completed reports selected by active time-bounded auditor grants.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "reports.read_selected",
+        "predicate": "AUDITOR role plus active unexpired unrevoked grant; only completed reports are returned; downloads additionally require download_allowed=true.",
+        "predicateId": "auditor.active_scope_grant"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "contentType": "application/json",
+        "pathSchema": null,
+        "querySchema": "AuditorViewListQuerySchema",
+        "bodySchema": null
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "AuditorViewReportListResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "Read-only route; no idempotency key accepted."
+      },
+      "concurrency": {
+        "strategy": "tenant-scoped read",
+        "rule": "Only current active tenant grants or selected auditor-visible resources are returned."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "GET",
+      "path": "/api/notifications/preferences",
+      "operationId": "listNotificationPreferences",
+      "tags": [
+        "Notifications"
+      ],
+      "summary": "List current user notification preferences and mandatory notification types.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": false
+      },
+      "authorization": {
+        "permission": "notifications.read",
+        "predicate": "Active tenant membership plus notifications.read; preferences are scoped to the current user and tenant only.",
+        "predicateId": "notifications.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes"
+        ],
+        "pathSchema": null,
+        "querySchema": null,
+        "bodySchema": null,
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "NotificationPreferencesResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "Read-only preference listing; clients may retry."
+      },
+      "concurrency": {
+        "strategy": "none",
+        "rule": "Read-only preference listing."
+      },
+      "audit": {
+        "event": "none",
+        "sameTransactionWhereFeasible": false
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    },
+    {
+      "version": "v1",
+      "method": "PATCH",
+      "path": "/api/notifications/preferences",
+      "operationId": "updateNotificationPreferences",
+      "tags": [
+        "Notifications"
+      ],
+      "summary": "Update current user notification preferences for non-security categories.",
+      "authentication": {
+        "required": true,
+        "scheme": "opaque-server-side-session-cookie",
+        "cookieName": "auditflow_session",
+        "csrfRequiredForStateChange": true
+      },
+      "authorization": {
+        "permission": "notifications.read",
+        "predicate": "Active tenant membership plus notifications.read; mandatory account/security and invitation notifications cannot be disabled.",
+        "predicateId": "notifications.read"
+      },
+      "request": {
+        "headers": [
+          "x-request-id optional",
+          "x-auditflow-company-id for tenant routes",
+          "x-csrf-token required"
+        ],
+        "pathSchema": null,
+        "querySchema": null,
+        "bodySchema": "NotificationPreferenceUpdateRequestV1",
+        "contentType": "application/json"
+      },
+      "successResponse": {
+        "status": 200,
+        "schema": "NotificationPreferencesResponseV1",
+        "envelope": true
+      },
+      "errors": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        422,
+        429,
+        500
+      ],
+      "idempotency": {
+        "supported": false,
+        "rule": "Preference writes are last-write-wins within tenant/user scope; clients may retry after reading current preferences."
+      },
+      "concurrency": {
+        "strategy": "service preconditions",
+        "rule": "Service rejects attempts to disable mandatory notification categories."
+      },
+      "audit": {
+        "event": "NOTIFICATION_PREFERENCES_UPDATED",
+        "sameTransactionWhereFeasible": true
+      },
+      "rateLimit": {
+        "policy": "standard"
+      }
+    }
+  ],
+  "completionStandard": {
+    "source": "AuditFlow v2.1 API Contract Completion Standard",
+    "routeCompleteOnlyWhen": [
+      "operationId",
+      "authentication",
+      "authorization.exactPermission",
+      "authorization.resourceOwnershipPredicate",
+      "pathQueryBodySchemas",
+      "successResponseEnvelopeSchema",
+      "documentedErrorSet",
+      "idempotencyRule",
+      "concurrencyPrecondition",
+      "auditEventDeclaration",
+      "rateLimitPolicy"
+    ],
+    "stateChangingRule": "Authenticated POST, PATCH, and DELETE routes require independent CSRF metadata in the contract.",
+    "idempotentMutationRule": "Supported idempotent operations document Idempotency-Key, tenant-scoped deduplication, and replay response behavior.",
+    "customerEvidenceRelease": "blockedUntilProductionGatePasses"
+  }
+}

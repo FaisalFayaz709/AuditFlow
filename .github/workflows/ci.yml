@@ -1,0 +1,91 @@
+name: AuditFlow CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.0
+
+      - name: Install dependencies
+        run: |
+          if [ -f pnpm-lock.yaml ]; then
+            pnpm install --frozen-lockfile
+          else
+            echo "pnpm-lock.yaml missing; using non-frozen install for source validation only. Commit a real lockfile before release."
+            pnpm install --frozen-lockfile=false
+          fi
+
+      - name: Prisma validation and generation
+        run: |
+          pnpm db:validate
+          pnpm db:generate
+
+      - name: Generate OpenAPI contract artifact
+        run: pnpm openapi:generate
+
+      - name: Format check
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Specification guard
+        run: pnpm spec:forbidden
+
+      - name: Unit tests
+        run: pnpm test:unit
+
+      - name: Integration tests
+        run: pnpm test:integration
+
+      - name: API contract tests
+        run: pnpm test:contracts
+
+      - name: Tenant/RBAC/security tests
+        run: pnpm test:security
+
+      - name: Backend boot and health tests
+        run: pnpm test:backend-boot
+
+      - name: Frontend runtime and accessibility tests
+        run: pnpm test:frontend-runtime
+
+      - name: Backend and frontend build
+        run: pnpm build
+
+      - name: Dependency scan
+        run: pnpm ci:dependency-scan
+
+      - name: Migration validation
+        run: pnpm ci:migration-validate
+
+      - name: Release readiness source check
+        run: pnpm release:readiness
+
+      - name: Operational source gates
+        run: pnpm ci:operational-gates
+
+      - name: Staging smoke contract
+        run: pnpm ci:staging-smoke-contract
+
+      - name: Playwright critical workflow smoke
+        run: pnpm test:e2e

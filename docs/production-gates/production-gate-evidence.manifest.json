@@ -1,0 +1,205 @@
+{
+  "schemaVersion": "auditflow.productionGateEvidence.v1",
+  "gateStatus": "PENDING_HUMAN_EVIDENCE",
+  "customerEvidenceAllowed": false,
+  "approvalRequiredBeforeCustomerEvidence": true,
+  "lockedArchitecture": {
+    "backend": "Fastify + TypeScript modular monolith",
+    "frontend": "React + TypeScript + Vite",
+    "database": "PostgreSQL + Prisma",
+    "storage": "S3/R2/MinIO-compatible private object storage for production",
+    "ai": "optional advisory structured human-in-the-loop"
+  },
+  "requiredAreas": [
+    {
+      "area": "security",
+      "artifact": "docs/production-gates/security-review.md",
+      "requiredEvidence": [
+        "independent threat review",
+        "cross-tenant/IDOR test evidence",
+        "CSRF test evidence",
+        "upload validation evidence",
+        "dependency scan evidence",
+        "secret rotation procedure evidence",
+        "cross-tenant/IDOR tests",
+        "CSRF tests",
+        "dependency scanning"
+      ],
+      "status": "PENDING_HUMAN_EVIDENCE",
+      "evidenceReferences": [],
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "area": "files",
+      "artifact": "docs/production-gates/files-storage-security.md",
+      "requiredEvidence": [
+        "private encrypted storage proof",
+        "malware scanning proof",
+        "object reconciliation proof",
+        "download authorization proof",
+        "download authorization tests"
+      ],
+      "status": "PENDING_HUMAN_EVIDENCE",
+      "evidenceReferences": [],
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "area": "recovery",
+      "artifact": "docs/production-gates/backup-restore-test.md",
+      "requiredEvidence": [
+        "managed backup/PITR proof where available",
+        "restore test result",
+        "explicit RPO/RTO",
+        "managed backups/PITR",
+        "documented restore test"
+      ],
+      "status": "PENDING_HUMAN_EVIDENCE",
+      "evidenceReferences": [],
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "area": "observability",
+      "artifact": "docs/production-gates/observability-checks.md",
+      "requiredEvidence": [
+        "request ID propagation",
+        "structured redacted logs",
+        "error tracking",
+        "uptime checks",
+        "database/storage/worker alerts",
+        "request IDs",
+        "storage/database/worker alerts"
+      ],
+      "status": "PENDING_HUMAN_EVIDENCE",
+      "evidenceReferences": [],
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "area": "privacy",
+      "artifact": "docs/production-gates/privacy-retention-ai-provider.md",
+      "requiredEvidence": [
+        "retention/deletion terms",
+        "DPA/subprocessor inventory",
+        "AI provider data handling",
+        "incident notification process"
+      ],
+      "status": "PENDING_HUMAN_EVIDENCE",
+      "evidenceReferences": [],
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "area": "performance",
+      "artifact": "docs/production-gates/load-test-results.md",
+      "requiredEvidence": [
+        "representative load test",
+        "typical list/detail API p95 target <= 500ms for agreed dataset"
+      ],
+      "status": "PENDING_HUMAN_EVIDENCE",
+      "evidenceReferences": [],
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "area": "accessibility",
+      "artifact": "docs/production-gates/accessibility-checklist.md",
+      "requiredEvidence": [
+        "keyboard-accessible primary workflows",
+        "semantic forms/tables",
+        "non-color status cues",
+        "keyboard primary workflows"
+      ],
+      "status": "PENDING_HUMAN_EVIDENCE",
+      "evidenceReferences": [],
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "area": "operations",
+      "artifact": "docs/production-gates/operations-release-support.md",
+      "requiredEvidence": [
+        "staging environment evidence",
+        "CI/CD evidence",
+        "migration/release checklist",
+        "incident runbooks",
+        "support escalation owner"
+      ],
+      "status": "PENDING_HUMAN_EVIDENCE",
+      "evidenceReferences": [],
+      "approvedBy": null,
+      "approvedAt": null
+    }
+  ],
+  "incidentRunbooks": [
+    "suspected cross-tenant access",
+    "malware upload",
+    "database outage",
+    "object storage outage",
+    "AI provider outage",
+    "worker/Redis outage",
+    "credential leak",
+    "failed migration"
+  ],
+  "strictApprovalInstructions": {
+    "command": "pnpm gate:production-strict",
+    "approvalRule": "All requiredAreas[].status must be APPROVED with non-placeholder evidenceReferences, approvedBy, approvedAt, approvalReference, and gateStatus must be APPROVED before CUSTOMER_EVIDENCE_ENABLED may be true in production.",
+    "runtimeGate": "backend/src/shared/production-gate.ts blocks real customer evidence unless PRODUCTION_GATE_STATUS=APPROVED and PRODUCTION_GATE_APPROVAL_REFERENCE is present.",
+    "pass59Audit": "pnpm verify:59 verifies the checked-in archive remains blocked until real production evidence is attached."
+  },
+  "customerEvidenceRelease": "BLOCKED_UNTIL_STRICT_PRODUCTION_GATE_APPROVAL",
+  "approvalReference": null,
+  "requiredRealEvidence": {
+    "security": [
+      "independent threat review",
+      "cross-tenant/IDOR tests",
+      "CSRF tests",
+      "upload validation",
+      "dependency scanning",
+      "secret rotation procedure"
+    ],
+    "files": [
+      "private encrypted storage",
+      "malware scanning",
+      "object reconciliation",
+      "download authorization tests"
+    ],
+    "recovery": [
+      "managed backups/PITR",
+      "documented restore test",
+      "explicit RPO/RTO"
+    ],
+    "observability": [
+      "request IDs",
+      "structured redacted logs",
+      "error tracking",
+      "uptime checks",
+      "storage/database/worker alerts"
+    ],
+    "privacy": [
+      "retention/deletion terms",
+      "DPA/subprocessor inventory",
+      "AI provider data handling",
+      "incident notification process"
+    ],
+    "performance": [
+      "representative load test",
+      "typical list/detail API p95 target <= 500ms"
+    ],
+    "accessibility": [
+      "keyboard primary workflows",
+      "semantic forms/tables",
+      "non-color status cues"
+    ],
+    "operations": [
+      "staging environment",
+      "CI/CD evidence",
+      "migration/release checklist",
+      "incident runbooks",
+      "support escalation owner"
+    ]
+  },
+  "strictGatePreparedBy": "production-gate-source-artifacts"
+}

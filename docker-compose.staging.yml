@@ -1,0 +1,73 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: auditflow
+      POSTGRES_PASSWORD: auditflow_staging_password_change_me
+      POSTGRES_DB: auditflow_staging
+    ports:
+      - "5433:5432"
+    volumes:
+      - auditflow_staging_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auditflow -d auditflow_staging"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: staging
+      HOST: 0.0.0.0
+      PORT: 4000
+      DATABASE_URL: postgresql://auditflow:auditflow_staging_password_change_me@postgres:5432/auditflow_staging?schema=public
+      FRONTEND_ORIGIN: http://localhost:8080
+      SESSION_PEPPER: change_this_to_a_long_random_secret_before_use_32_chars
+      STORAGE_DRIVER: local
+      STORAGE_LOCAL_ROOT: /data/auditflow-storage
+      SECURITY_SCAN_MODE: required
+      CUSTOMER_EVIDENCE_ENABLED: "false"
+      PRODUCTION_GATE_STATUS: BLOCKED
+      PRODUCTION_GATE_APPROVAL_REFERENCE: ""
+      REDIS_URL: redis://redis:6379
+      JOBS_ENABLED: "true"
+      READINESS_CHECK_DATABASE: "true"
+      READINESS_CHECK_REDIS: "true"
+      APP_VERSION: 0.1.0
+      RELEASE_ID: staging-local
+      COMMIT_SHA: local
+    ports:
+      - "4000:4000"
+    volumes:
+      - auditflow_staging_files:/data/auditflow-storage
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    depends_on:
+      - backend
+    ports:
+      - "8080:8080"
+
+volumes:
+  auditflow_staging_pg:
+  auditflow_staging_files:

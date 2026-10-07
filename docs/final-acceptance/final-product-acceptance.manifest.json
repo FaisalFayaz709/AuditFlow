@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "auditflow.finalAcceptance.v1",
+  "version": "final-product-acceptance-v1",
+  "status": "PENDING_RUNTIME_EVIDENCE",
+  "customerEvidenceRelease": "BLOCKED_UNTIL_PRODUCTION_GATE_AND_RELEASE_OWNER_APPROVAL",
+  "requiredGates": [
+    "reproducible_dependency_install",
+    "ci_pipeline",
+    "production_nonfunctional_gate",
+    "controlled_release",
+    "manual_acceptance_smoke",
+    "release_owner_approval"
+  ],
+  "requiredTraceFields": [
+    "framework_enrollment",
+    "applicable_evidence_based_controls",
+    "required_evidence_requirements",
+    "immutable_evidence_versions",
+    "human_evidence_approval",
+    "human_mapping_approval",
+    "expiry_and_validity_decision",
+    "audit_event_provenance"
+  ]
+}

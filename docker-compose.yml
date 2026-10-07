@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: auditflow-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: auditflow
+      POSTGRES_PASSWORD: auditflow_dev_password
+      POSTGRES_DB: auditflow_dev
+    ports:
+      - "5433:5432"
+    volumes:
+      - auditflow_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auditflow -d auditflow_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: auditflow-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - auditflow_redis_data:/data
+
+volumes:
+  auditflow_postgres_data:
+  auditflow_redis_data:

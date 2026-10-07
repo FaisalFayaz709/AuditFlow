@@ -1,0 +1,1230 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+
+  @@map("user_status")
+}
+
+enum MembershipRole {
+  OWNER
+  ADMIN
+  COMPLIANCE_MANAGER
+  MEMBER
+  AUDITOR
+
+  @@map("membership_role")
+}
+
+enum MembershipStatus {
+  ACTIVE
+  DISABLED
+  REMOVED
+
+  @@map("membership_status")
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+
+  @@map("invitation_status")
+}
+
+enum FrameworkVersionStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+
+  @@map("framework_version_status")
+}
+
+enum CompanyFrameworkStatus {
+  DRAFT_RECONCILIATION
+  ACTIVE
+  ENDED
+
+  @@map("company_framework_status")
+}
+
+enum ControlRiskLevel {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+
+  @@map("control_risk_level")
+}
+
+enum ControlType {
+  EVIDENCE_BASED
+  INFORMATIONAL
+
+  @@map("control_type")
+}
+
+enum CompanyControlApplicability {
+  APPLICABLE
+  NOT_APPLICABLE
+
+  @@map("company_control_applicability")
+}
+
+enum EvidenceRequirementType {
+  DOCUMENT
+  SCREENSHOT
+  REPORT
+  LOG
+  EXPORT
+  ATTESTATION
+  OTHER
+
+  @@map("evidence_requirement_type")
+}
+
+enum EvidenceSensitivityLevel {
+  INTERNAL
+  CONFIDENTIAL
+  RESTRICTED
+
+  @@map("evidence_sensitivity_level")
+}
+
+enum EvidenceSource {
+  MANUAL_UPLOAD
+  TASK_SUBMISSION
+  INTEGRATION
+
+  @@map("evidence_source")
+}
+
+enum EvidenceVersionStatus {
+  UPLOADED
+  QUARANTINED
+  SECURITY_REJECTED
+  PROCESSING
+  PROCESSING_FAILED
+  NEEDS_REVIEW
+  APPROVED
+  REJECTED
+  EXPIRED
+  SUPERSEDED
+  ARCHIVED
+
+  @@map("evidence_version_status")
+}
+
+enum SecurityScanStatus {
+  NOT_REQUIRED
+  PENDING
+  CLEAN
+  MALICIOUS
+  FAILED
+
+  @@map("security_scan_status")
+}
+
+enum UploadIntentStatus {
+  CREATED
+  UPLOADED
+  VALIDATING
+  FINALIZING
+  FINALIZED
+  FAILED
+  EXPIRED
+
+  @@map("upload_intent_status")
+}
+
+enum StorageReconciliationStatus {
+  NOT_REQUIRED
+  REQUIRED
+  RETRYING
+  RECONCILED
+  FAILED
+
+  @@map("storage_reconciliation_status")
+}
+
+enum EvidenceReviewDecision {
+  APPROVED
+  REJECTED
+
+  @@map("evidence_review_decision")
+}
+
+enum MappingSource {
+  AI_SUGGESTED
+  MANUAL
+
+  @@map("mapping_source")
+}
+
+enum MappingStatus {
+  SUGGESTED
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+
+  @@map("mapping_status")
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  SUBMITTED
+  COMPLETED
+  REJECTED
+  CANCELLED
+
+  @@map("task_status")
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+
+  @@map("task_priority")
+}
+
+enum CommentEntityType {
+  TASK
+  COMPANY_CONTROL
+  EVIDENCE_ITEM
+  EVIDENCE_VERSION
+
+  @@map("comment_entity_type")
+}
+
+enum CommentVisibility {
+  INTERNAL
+  AUDITOR_VISIBLE
+
+  @@map("comment_visibility")
+}
+
+enum ReportType {
+  AUDIT_READINESS
+  MISSING_EVIDENCE
+  CONTROL_COVERAGE
+  EVIDENCE_INVENTORY
+
+  @@map("report_type")
+}
+
+enum ReportStatus {
+  QUEUED
+  GENERATING
+  COMPLETED
+  FAILED
+  EXPIRED
+
+  @@map("report_status")
+}
+
+enum ReportFormat {
+  JSON
+  CSV
+
+  @@map("report_format")
+}
+
+enum AiAnalysisStatus {
+  REQUESTED
+  PROCESSING
+  COMPLETED
+  FAILED
+
+  @@map("ai_analysis_status")
+}
+
+enum AiEvaluationRunStatus {
+  PASSED
+  FAILED
+
+  @@map("ai_evaluation_run_status")
+}
+
+enum AuditorScopeType {
+  FRAMEWORK
+  CONTROL
+  EVIDENCE_ITEM
+  EVIDENCE_VERSION
+  REPORT
+
+  @@map("auditor_scope_type")
+}
+
+enum DeletionRequestStatus {
+  REQUESTED
+  APPROVED
+  SCHEDULED
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+
+  @@map("deletion_request_status")
+}
+
+enum NotificationType {
+  MEMBER_INVITED
+  INVITATION_SENT
+  TASK_ASSIGNED
+  TASK_DUE_SOON
+  TASK_OVERDUE
+  EVIDENCE_SUBMITTED
+  EVIDENCE_NEEDS_REVIEW
+  EVIDENCE_REJECTED
+  EVIDENCE_EXPIRING
+  AI_ANALYSIS_COMPLETED
+  REPORT_READY
+  AUDITOR_ACCESS_GRANTED
+  ACCOUNT_SECURITY_EVENT
+
+  @@map("notification_type")
+}
+
+enum NotificationChannel {
+  EMAIL
+
+  @@map("notification_channel")
+}
+
+enum NotificationPreferenceCategory {
+  ACCOUNT_SECURITY
+  INVITATION
+  WORKFLOW
+  REMINDER
+  REPORT
+  AI
+  AUDITOR_ACCESS
+
+  @@map("notification_preference_category")
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  CANCELLED
+  SUPPRESSED
+
+  @@map("notification_status")
+}
+
+enum NotificationDeliveryStatus {
+  PENDING
+  SENT
+  FAILED
+  PERMANENT_FAILURE
+
+  @@map("notification_delivery_status")
+}
+
+model User {
+  id                String     @id @default(cuid())
+  name              String
+  email             String     @unique
+  email_verified_at DateTime?
+  password_hash     String?
+  status            UserStatus @default(ACTIVE)
+  created_at        DateTime   @default(now())
+  updated_at        DateTime   @updatedAt
+
+  sessions                           Session[]
+  memberships                        CompanyMember[]
+  audit_logs                         AuditLog[]
+  password_reset_tokens              PasswordResetToken[]
+  email_verification_tokens          EmailVerificationToken[]
+  sent_invitations                   CompanyInvitation[]      @relation("InvitationInvitedBy")
+  accepted_invitations               CompanyInvitation[]      @relation("InvitationAcceptedBy")
+  revoked_invitations                CompanyInvitation[]      @relation("InvitationRevokedBy")
+  owned_company_controls             CompanyControl[]         @relation("CompanyControlOwner")
+  approved_na_controls               CompanyControl[]         @relation("CompanyControlNotApplicableApprover")
+  created_evidence_items             EvidenceItem[]           @relation("EvidenceItemCreatedBy")
+  uploaded_evidence_versions         EvidenceVersion[]        @relation("EvidenceVersionUploadedBy")
+  evidence_reviews                   EvidenceReview[]         @relation("EvidenceReviewReviewer")
+  upload_intents                     UploadIntent[]           @relation("UploadIntentCreatedBy")
+  mapped_evidence_control_mappings   EvidenceControlMapping[] @relation("EvidenceMappingMappedBy")
+  reviewed_evidence_control_mappings EvidenceControlMapping[] @relation("EvidenceMappingReviewedBy")
+  assigned_tasks                     Task[]                   @relation("TaskAssignee")
+  created_tasks                      Task[]                   @relation("TaskCreatedBy")
+  submitted_task_evidence            TaskEvidence[]           @relation("TaskEvidenceSubmittedBy")
+  comments                           Comment[]                @relation("CommentAuthor")
+  generated_reports                  Report[]                 @relation("ReportGeneratedBy")
+  notifications                      Notification[]           @relation("NotificationRecipient")
+  notification_preferences           NotificationPreference[] @relation("NotificationPreferenceUser")
+  granted_auditor_access_grants      AuditorAccessGrant[]     @relation("AuditorAccessGrantGrantedBy")
+  revoked_auditor_access_grants      AuditorAccessGrant[]     @relation("AuditorAccessGrantRevokedBy")
+  requested_deletion_requests        DeletionRequest[]        @relation("DeletionRequestRequestedBy")
+  approved_deletion_requests         DeletionRequest[]        @relation("DeletionRequestApprovedBy")
+  cancelled_deletion_requests        DeletionRequest[]        @relation("DeletionRequestCancelledBy")
+  placed_legal_holds                 LegalHold[]              @relation("LegalHoldPlacedBy")
+  released_legal_holds               LegalHold[]              @relation("LegalHoldReleasedBy")
+  ai_evaluation_runs                 AiEvaluationRun[]        @relation("AiEvaluationRunCreatedBy")
+
+  @@index([status])
+  @@map("users")
+}
+
+model Session {
+  id                   String    @id @default(cuid())
+  user_id              String
+  token_hash           String    @unique
+  expires_at           DateTime // Deprecated alias retained from Pass 02; equals absolute_expires_at.
+  idle_expires_at      DateTime
+  absolute_expires_at  DateTime
+  last_seen_at         DateTime  @default(now())
+  csrf_token_hash      String?
+  csrf_token_issued_at DateTime?
+  revoked_at           DateTime?
+  revoked_reason       String?
+  ip_address           String?
+  user_agent           String?
+  created_at           DateTime  @default(now())
+
+  user       User       @relation(fields: [user_id], references: [id], onDelete: Restrict)
+  audit_logs AuditLog[]
+
+  @@index([user_id, revoked_at, idle_expires_at])
+  @@index([user_id, revoked_at, absolute_expires_at])
+  @@map("sessions")
+}
+
+model PasswordResetToken {
+  id         String    @id @default(cuid())
+  user_id    String
+  token_hash String    @unique
+  expires_at DateTime
+  used_at    DateTime?
+  created_at DateTime  @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Restrict)
+
+  @@index([user_id, expires_at, used_at])
+  @@map("password_reset_tokens")
+}
+
+model EmailVerificationToken {
+  id         String    @id @default(cuid())
+  user_id    String
+  token_hash String    @unique
+  expires_at DateTime
+  used_at    DateTime?
+  created_at DateTime  @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Restrict)
+
+  @@index([user_id, expires_at, used_at])
+  @@map("email_verification_tokens")
+}
+
+model Company {
+  id            String   @id @default(cuid())
+  name          String
+  industry      String?
+  website       String?
+  settings_json Json     @default("{}")
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  members                   CompanyMember[]
+  invitations               CompanyInvitation[]
+  audit_logs                AuditLog[]
+  company_frameworks        CompanyFramework[]
+  evidence_items            EvidenceItem[]
+  upload_intents            UploadIntent[]
+  evidence_control_mappings EvidenceControlMapping[]
+  reports                   Report[]
+  ai_analyses               AiAnalysis[]
+  notifications             Notification[]
+  notification_preferences  NotificationPreference[]
+  auditor_access_grants     AuditorAccessGrant[]
+  deletion_requests         DeletionRequest[]
+  legal_holds               LegalHold[]
+
+  tasks    Task[]
+  comments Comment[]
+
+  @@map("companies")
+}
+
+model CompanyMember {
+  id         String           @id @default(cuid())
+  company_id String
+  user_id    String
+  role       MembershipRole
+  status     MembershipStatus @default(ACTIVE)
+  created_at DateTime         @default(now())
+  updated_at DateTime         @updatedAt
+
+  company               Company              @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  user                  User                 @relation(fields: [user_id], references: [id], onDelete: Restrict)
+  auditor_access_grants AuditorAccessGrant[] @relation("AuditorAccessGrantAuditorMember")
+
+  @@unique([company_id, user_id])
+  @@index([user_id, status])
+  @@index([company_id, status])
+  @@map("company_members")
+}
+
+model CompanyInvitation {
+  id                  String           @id @default(cuid())
+  company_id          String
+  email               String
+  role                MembershipRole
+  token_hash          String           @unique
+  status              InvitationStatus @default(PENDING)
+  invited_by_user_id  String
+  accepted_by_user_id String?
+  revoked_by_user_id  String?
+  expires_at          DateTime
+  accepted_at         DateTime?
+  revoked_at          DateTime?
+  created_at          DateTime         @default(now())
+  updated_at          DateTime         @updatedAt
+
+  company     Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  invited_by  User    @relation("InvitationInvitedBy", fields: [invited_by_user_id], references: [id], onDelete: Restrict)
+  accepted_by User?   @relation("InvitationAcceptedBy", fields: [accepted_by_user_id], references: [id], onDelete: SetNull)
+  revoked_by  User?   @relation("InvitationRevokedBy", fields: [revoked_by_user_id], references: [id], onDelete: SetNull)
+
+  @@index([company_id, email, status])
+  @@index([company_id, status, expires_at])
+  @@index([expires_at, status])
+  @@map("company_invitations")
+}
+
+model Framework {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  is_template Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  versions    FrameworkVersion[]
+  enrollments CompanyFramework[]
+
+  @@unique([name])
+  @@map("frameworks")
+}
+
+model FrameworkVersion {
+  id           String                 @id @default(cuid())
+  framework_id String
+  version      String
+  status       FrameworkVersionStatus @default(DRAFT)
+  published_at DateTime?
+  created_at   DateTime               @default(now())
+  updated_at   DateTime               @updatedAt
+
+  framework   Framework          @relation(fields: [framework_id], references: [id], onDelete: Restrict)
+  categories  ControlCategory[]
+  controls    Control[]
+  enrollments CompanyFramework[]
+
+  @@unique([framework_id, version])
+  @@index([status, published_at])
+  @@map("framework_versions")
+}
+
+model ControlCategory {
+  id                   String  @id @default(cuid())
+  framework_version_id String
+  name                 String
+  description          String?
+  sort_order           Int     @default(0)
+
+  framework_version FrameworkVersion @relation(fields: [framework_version_id], references: [id], onDelete: Restrict)
+  controls          Control[]
+
+  @@unique([framework_version_id, name])
+  @@unique([framework_version_id, sort_order])
+  @@map("control_categories")
+}
+
+model Control {
+  id                   String           @id @default(cuid())
+  framework_version_id String
+  category_id          String?
+  code                 String
+  title                String
+  description          String
+  risk_level           ControlRiskLevel
+  control_type         ControlType      @default(EVIDENCE_BASED)
+  sort_order           Int              @default(0)
+  created_at           DateTime         @default(now())
+  updated_at           DateTime         @updatedAt
+
+  framework_version         FrameworkVersion         @relation(fields: [framework_version_id], references: [id], onDelete: Restrict)
+  category                  ControlCategory?         @relation(fields: [category_id], references: [id], onDelete: Restrict)
+  evidence_requirements     EvidenceRequirement[]
+  company_controls          CompanyControl[]
+  evidence_control_mappings EvidenceControlMapping[]
+  // Reports are company-scoped records; control references are stored in report content_json/parameters_json.
+
+  @@unique([framework_version_id, code])
+  @@unique([framework_version_id, sort_order])
+  @@index([framework_version_id, control_type])
+  @@index([framework_version_id, risk_level])
+  @@map("controls")
+}
+
+model EvidenceRequirement {
+  id               String                  @id @default(cuid())
+  control_id       String
+  code             String
+  name             String
+  description      String?
+  requirement_type EvidenceRequirementType @default(DOCUMENT)
+  required         Boolean                 @default(true)
+  validity_days    Int?
+  sort_order       Int                     @default(0)
+
+  control                   Control                  @relation(fields: [control_id], references: [id], onDelete: Restrict)
+  evidence_control_mappings EvidenceControlMapping[]
+  tasks                     Task[]
+
+  @@unique([control_id, code])
+  @@unique([control_id, sort_order])
+  @@index([control_id, required])
+  @@map("evidence_requirements")
+}
+
+model CompanyFramework {
+  id                   String                 @id @default(cuid())
+  company_id           String
+  framework_id         String
+  framework_version_id String
+  status               CompanyFrameworkStatus @default(ACTIVE)
+  started_at           DateTime               @default(now())
+  target_audit_date    DateTime?
+  ended_at             DateTime?
+  created_at           DateTime               @default(now())
+  updated_at           DateTime               @updatedAt
+
+  company           Company          @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  framework         Framework        @relation(fields: [framework_id], references: [id], onDelete: Restrict)
+  framework_version FrameworkVersion @relation(fields: [framework_version_id], references: [id], onDelete: Restrict)
+  company_controls  CompanyControl[]
+
+  @@index([company_id, status])
+  @@index([company_id, framework_id, status])
+  @@index([framework_version_id])
+  @@map("company_frameworks")
+}
+
+model FrameworkUpgradeReconciliation {
+  id                          String    @id @default(cuid())
+  company_id                  String
+  old_company_framework_id    String
+  new_company_framework_id    String    @unique
+  target_framework_version_id String
+  status                      String    @default("OPEN")
+  preview_json                Json      @default("{}")
+  created_by_user_id          String
+  reviewed_by_user_id         String?
+  reviewed_at                 DateTime?
+  activated_by_user_id        String?
+  activated_at                DateTime?
+  created_at                  DateTime  @default(now())
+  updated_at                  DateTime  @updatedAt
+
+  control_matches     FrameworkUpgradeControlMatch[]
+  requirement_matches FrameworkUpgradeRequirementMatch[]
+  mapping_candidates  FrameworkUpgradeMappingCandidate[]
+
+  @@index([company_id, old_company_framework_id, status])
+  @@index([company_id, new_company_framework_id, status])
+  @@index([target_framework_version_id])
+  @@map("framework_upgrade_reconciliations")
+}
+
+model FrameworkUpgradeControlMatch {
+  id                  String   @id @default(cuid())
+  reconciliation_id   String
+  match_type          String
+  stable_code         String
+  old_control_id      String?
+  new_control_id      String?
+  materially_changed  Boolean  @default(false)
+  change_summary_json Json     @default("{}")
+  created_at          DateTime @default(now())
+
+  reconciliation FrameworkUpgradeReconciliation @relation(fields: [reconciliation_id], references: [id], onDelete: Restrict)
+
+  @@index([reconciliation_id, match_type])
+  @@index([old_control_id])
+  @@index([new_control_id])
+  @@map("framework_upgrade_control_matches")
+}
+
+model FrameworkUpgradeRequirementMatch {
+  id                      String   @id @default(cuid())
+  reconciliation_id       String
+  control_match_id        String?
+  match_type              String
+  stable_control_code     String
+  stable_requirement_code String
+  old_requirement_id      String?
+  new_requirement_id      String?
+  old_control_id          String?
+  new_control_id          String?
+  materially_changed      Boolean  @default(false)
+  change_summary_json     Json     @default("{}")
+  created_at              DateTime @default(now())
+
+  reconciliation FrameworkUpgradeReconciliation @relation(fields: [reconciliation_id], references: [id], onDelete: Restrict)
+
+  @@index([reconciliation_id, match_type])
+  @@index([old_requirement_id])
+  @@index([new_requirement_id])
+  @@map("framework_upgrade_requirement_matches")
+}
+
+model FrameworkUpgradeMappingCandidate {
+  id                  String   @id @default(cuid())
+  reconciliation_id   String
+  old_mapping_id      String
+  evidence_version_id String
+  old_control_id      String
+  old_requirement_id  String?
+  new_control_id      String
+  new_requirement_id  String?
+  status              String   @default("PENDING_REVIEW_READY")
+  copied_mapping_id   String?
+  reason              String?
+  created_at          DateTime @default(now())
+
+  reconciliation FrameworkUpgradeReconciliation @relation(fields: [reconciliation_id], references: [id], onDelete: Restrict)
+
+  @@unique([reconciliation_id, old_mapping_id])
+  @@index([reconciliation_id, status])
+  @@index([evidence_version_id])
+  @@index([copied_mapping_id])
+  @@map("framework_upgrade_mapping_candidates")
+}
+
+model CompanyControl {
+  id                         String                      @id @default(cuid())
+  company_framework_id       String
+  control_id                 String
+  applicability              CompanyControlApplicability @default(APPLICABLE)
+  not_applicable_reason      String?
+  not_applicable_approved_by String?
+  owner_user_id              String?
+  created_at                 DateTime                    @default(now())
+  updated_at                 DateTime                    @updatedAt
+
+  company_framework       CompanyFramework @relation(fields: [company_framework_id], references: [id], onDelete: Restrict)
+  control                 Control          @relation(fields: [control_id], references: [id], onDelete: Restrict)
+  owner                   User?            @relation("CompanyControlOwner", fields: [owner_user_id], references: [id], onDelete: SetNull)
+  not_applicable_approver User?            @relation("CompanyControlNotApplicableApprover", fields: [not_applicable_approved_by], references: [id], onDelete: SetNull)
+  tasks                   Task[]
+
+  @@unique([company_framework_id, control_id])
+  @@index([company_framework_id, applicability])
+  @@index([owner_user_id])
+  @@map("company_controls")
+}
+
+model EvidenceItem {
+  id                          String                   @id @default(cuid())
+  company_id                  String
+  title                       String
+  description                 String?
+  sensitivity_level           EvidenceSensitivityLevel @default(INTERNAL)
+  latest_version_id           String?
+  current_approved_version_id String?
+  created_by_user_id          String
+  archived_at                 DateTime?
+  created_at                  DateTime                 @default(now())
+  updated_at                  DateTime                 @updatedAt
+
+  company                  Company           @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  created_by               User              @relation("EvidenceItemCreatedBy", fields: [created_by_user_id], references: [id], onDelete: Restrict)
+  versions                 EvidenceVersion[] @relation("EvidenceItemVersions")
+  latest_version           EvidenceVersion?  @relation("EvidenceItemLatestVersion", fields: [latest_version_id], references: [id], onDelete: SetNull)
+  current_approved_version EvidenceVersion?  @relation("EvidenceItemCurrentApprovedVersion", fields: [current_approved_version_id], references: [id], onDelete: SetNull)
+  upload_intents           UploadIntent[]
+
+  @@index([company_id, archived_at, created_at(sort: Desc)])
+  @@index([latest_version_id])
+  @@index([current_approved_version_id])
+  @@map("evidence_items")
+}
+
+model EvidenceVersion {
+  id                                String                      @id @default(cuid())
+  evidence_item_id                  String
+  version_no                        Int
+  storage_key                       String                      @unique
+  file_name                         String
+  mime_type                         String
+  file_size                         Int
+  sha256_checksum                   String
+  extracted_text                    String?
+  status                            EvidenceVersionStatus       @default(UPLOADED)
+  security_scan_status              SecurityScanStatus          @default(PENDING)
+  security_scan_completed_at        DateTime?
+  quarantine_reason                 String?
+  object_finalized_at               DateTime?
+  storage_reconciliation_required   Boolean                     @default(false)
+  storage_reconciliation_status     StorageReconciliationStatus @default(NOT_REQUIRED)
+  storage_reconciliation_attempts   Int                         @default(0)
+  storage_reconciliation_last_error String?
+  effective_from                    DateTime?
+  effective_until                   DateTime?
+  expiry_date                       DateTime?
+  uploaded_by_user_id               String
+  source                            EvidenceSource              @default(MANUAL_UPLOAD)
+  supersedes_version_id             String?
+  created_at                        DateTime                    @default(now())
+  updated_at                        DateTime                    @updatedAt
+
+  evidence_item             EvidenceItem             @relation("EvidenceItemVersions", fields: [evidence_item_id], references: [id], onDelete: Restrict)
+  uploaded_by               User                     @relation("EvidenceVersionUploadedBy", fields: [uploaded_by_user_id], references: [id], onDelete: Restrict)
+  supersedes_version        EvidenceVersion?         @relation("EvidenceVersionSupersedes", fields: [supersedes_version_id], references: [id], onDelete: Restrict)
+  superseded_by_versions    EvidenceVersion[]        @relation("EvidenceVersionSupersedes")
+  item_latest_for           EvidenceItem[]           @relation("EvidenceItemLatestVersion")
+  item_current_approved_for EvidenceItem[]           @relation("EvidenceItemCurrentApprovedVersion")
+  reviews                   EvidenceReview[]
+  evidence_control_mappings EvidenceControlMapping[]
+  ai_analyses               AiAnalysis[]
+  upload_intents            UploadIntent[]
+  task_evidence             TaskEvidence[]
+
+  @@unique([evidence_item_id, version_no])
+  @@index([evidence_item_id, version_no(sort: Desc)])
+  @@index([status, expiry_date])
+  @@index([sha256_checksum])
+  @@index([uploaded_by_user_id])
+  @@map("evidence_versions")
+}
+
+model EvidenceReview {
+  id                  String                 @id @default(cuid())
+  evidence_version_id String
+  reviewer_user_id    String
+  decision            EvidenceReviewDecision
+  reason              String?
+  review_note         String?
+  checklist_json      Json                   @default("{}")
+  created_at          DateTime               @default(now())
+
+  evidence_version EvidenceVersion @relation(fields: [evidence_version_id], references: [id], onDelete: Restrict)
+  reviewer         User            @relation("EvidenceReviewReviewer", fields: [reviewer_user_id], references: [id], onDelete: Restrict)
+
+  @@index([evidence_version_id, created_at(sort: Desc)])
+  @@index([reviewer_user_id, created_at(sort: Desc)])
+  @@map("evidence_reviews")
+}
+
+model EvidenceControlMapping {
+  id                  String        @id @default(cuid())
+  company_id          String
+  evidence_version_id String
+  control_id          String
+  requirement_id      String?
+  source              MappingSource @default(MANUAL)
+  status              MappingStatus @default(PENDING_REVIEW)
+  ai_confidence       Decimal?      @db.Decimal(5, 4)
+  reason              String?
+  rejection_reason    String?
+  mapped_by_user_id   String?
+  reviewed_by_user_id String?
+  reviewed_at         DateTime?
+  created_at          DateTime      @default(now())
+  updated_at          DateTime      @updatedAt
+
+  company          Company              @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  evidence_version EvidenceVersion      @relation(fields: [evidence_version_id], references: [id], onDelete: Restrict)
+  control          Control              @relation(fields: [control_id], references: [id], onDelete: Restrict)
+  requirement      EvidenceRequirement? @relation(fields: [requirement_id], references: [id], onDelete: Restrict)
+  mapped_by        User?                @relation("EvidenceMappingMappedBy", fields: [mapped_by_user_id], references: [id], onDelete: SetNull)
+  reviewed_by      User?                @relation("EvidenceMappingReviewedBy", fields: [reviewed_by_user_id], references: [id], onDelete: SetNull)
+
+  @@index([company_id, control_id, status])
+  @@index([requirement_id, status])
+  @@index([evidence_version_id, status])
+  @@index([mapped_by_user_id, created_at(sort: Desc)])
+  @@index([reviewed_by_user_id, reviewed_at])
+  @@map("evidence_control_mappings")
+}
+
+model Task {
+  id                  String       @id @default(cuid())
+  company_id          String
+  company_control_id  String
+  requirement_id      String?
+  assigned_to_user_id String?
+  created_by_user_id  String
+  title               String
+  description         String?
+  priority            TaskPriority @default(MEDIUM)
+  status              TaskStatus   @default(TODO)
+  due_date            DateTime?
+  cancelled_reason    String?
+  administrative_only Boolean      @default(false)
+  completed_at        DateTime?
+  rejected_reason     String?
+  created_at          DateTime     @default(now())
+  updated_at          DateTime     @updatedAt
+
+  company         Company              @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  company_control CompanyControl       @relation(fields: [company_control_id], references: [id], onDelete: Restrict)
+  requirement     EvidenceRequirement? @relation(fields: [requirement_id], references: [id], onDelete: Restrict)
+  assigned_to     User?                @relation("TaskAssignee", fields: [assigned_to_user_id], references: [id], onDelete: SetNull)
+  created_by      User                 @relation("TaskCreatedBy", fields: [created_by_user_id], references: [id], onDelete: Restrict)
+  task_evidence   TaskEvidence[]
+
+  @@index([company_id, status, due_date])
+  @@index([assigned_to_user_id, status, due_date])
+  @@index([company_control_id, status])
+  @@index([requirement_id, status])
+  @@map("tasks")
+}
+
+model TaskEvidence {
+  id                   String   @id @default(cuid())
+  task_id              String
+  evidence_version_id  String
+  submitted_by_user_id String
+  created_at           DateTime @default(now())
+
+  task             Task            @relation(fields: [task_id], references: [id], onDelete: Restrict)
+  evidence_version EvidenceVersion @relation(fields: [evidence_version_id], references: [id], onDelete: Restrict)
+  submitted_by     User            @relation("TaskEvidenceSubmittedBy", fields: [submitted_by_user_id], references: [id], onDelete: Restrict)
+
+  @@unique([task_id, evidence_version_id])
+  @@index([evidence_version_id])
+  @@index([submitted_by_user_id, created_at(sort: Desc)])
+  @@map("task_evidence")
+}
+
+model Comment {
+  id          String            @id @default(cuid())
+  company_id  String
+  user_id     String
+  entity_type CommentEntityType
+  entity_id   String
+  visibility  CommentVisibility @default(INTERNAL)
+  body        String
+  archived_at DateTime?
+  created_at  DateTime          @default(now())
+  updated_at  DateTime          @updatedAt
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  user    User    @relation("CommentAuthor", fields: [user_id], references: [id], onDelete: Restrict)
+
+  @@index([company_id, entity_type, entity_id, archived_at, created_at])
+  @@index([user_id, created_at(sort: Desc)])
+  @@map("comments")
+}
+
+model UploadIntent {
+  id                    String             @id @default(cuid())
+  company_id            String
+  evidence_item_id      String?
+  idempotency_key       String?
+  temporary_storage_key String
+  final_storage_key     String
+  original_file_name    String
+  mime_type             String?
+  expected_sha256       String?
+  status                UploadIntentStatus @default(CREATED)
+  expires_at            DateTime
+  uploaded_at           DateTime?
+  validating_at         DateTime?
+  finalizing_at         DateTime?
+  finalized_at          DateTime?
+  failed_at             DateTime?
+  temp_deleted_at       DateTime?
+  failure_code          String?
+  evidence_version_id   String?
+  created_by_user_id    String
+  created_at            DateTime           @default(now())
+  updated_at            DateTime           @updatedAt
+
+  company          Company          @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  evidence_item    EvidenceItem?    @relation(fields: [evidence_item_id], references: [id], onDelete: Restrict)
+  evidence_version EvidenceVersion? @relation(fields: [evidence_version_id], references: [id], onDelete: Restrict)
+  created_by       User             @relation("UploadIntentCreatedBy", fields: [created_by_user_id], references: [id], onDelete: Restrict)
+
+  @@unique([company_id, idempotency_key])
+  @@index([company_id, status, expires_at])
+  @@index([company_id, evidence_version_id])
+  @@index([created_by_user_id, created_at(sort: Desc)])
+  @@map("upload_intents")
+}
+
+model Report {
+  id                      String       @id @default(cuid())
+  company_id              String
+  generated_by_user_id    String
+  type                    ReportType
+  format                  ReportFormat @default(JSON)
+  idempotency_key         String?
+  schema_version          String       @default("v1")
+  parameters_json         Json         @default("{}")
+  framework_enrollment_id String?
+  framework_version_id    String?
+  calculated_at           DateTime?
+  status                  ReportStatus @default(QUEUED)
+  storage_key             String?
+  content_json            Json?
+  content_text            String?
+  content_type            String?
+  file_name               String?
+  error_code              String?
+  created_at              DateTime     @default(now())
+  completed_at            DateTime?
+  expires_at              DateTime?
+
+  company      Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  generated_by User    @relation("ReportGeneratedBy", fields: [generated_by_user_id], references: [id], onDelete: Restrict)
+
+  @@unique([company_id, generated_by_user_id, idempotency_key])
+  @@index([company_id, created_at(sort: Desc)])
+  @@index([company_id, status, created_at(sort: Desc)])
+  @@index([company_id, type, created_at(sort: Desc)])
+  @@map("reports")
+}
+
+model AiAnalysis {
+  id                     String           @id @default(cuid())
+  company_id             String
+  evidence_version_id    String
+  provider               String
+  model_name             String
+  prompt_version         String
+  schema_version         String           @default("v1")
+  input_hash             String
+  status                 AiAnalysisStatus @default(REQUESTED)
+  document_type          String?
+  structured_result_json Json             @default("{}")
+  summary                String?
+  error_code             String?
+  error_message          String?
+  latency_ms             Int?
+  token_usage_json       Json             @default("{}")
+  created_at             DateTime         @default(now())
+  completed_at           DateTime?
+
+  company          Company         @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  evidence_version EvidenceVersion @relation(fields: [evidence_version_id], references: [id], onDelete: Restrict)
+
+  @@index([company_id, created_at(sort: Desc)])
+  @@index([evidence_version_id, created_at(sort: Desc)])
+  @@index([status, created_at])
+  @@map("ai_analyses")
+}
+
+model AiEvaluationRun {
+  id                 String                @id @default(cuid())
+  provider           String
+  model_name         String
+  prompt_version     String
+  schema_version     String                @default("pass-36-ai-evaluation-baseline-v1")
+  corpus_version     String
+  status             AiEvaluationRunStatus
+  metrics_json       Json                  @default("{}")
+  approval_reference String?
+  created_by_user_id String?
+  created_at         DateTime              @default(now())
+
+  created_by User? @relation("AiEvaluationRunCreatedBy", fields: [created_by_user_id], references: [id], onDelete: SetNull)
+
+  @@index([provider, model_name, prompt_version, created_at(sort: Desc)])
+  @@index([status, created_at(sort: Desc)])
+  @@map("ai_evaluation_runs")
+}
+
+model AuditorAccessGrant {
+  id                 String           @id @default(cuid())
+  company_id         String
+  auditor_member_id  String
+  scope_type         AuditorScopeType
+  scope_id           String
+  starts_at          DateTime
+  expires_at         DateTime
+  download_allowed   Boolean          @default(true)
+  granted_by_user_id String
+  revoked_by_user_id String?
+  revoked_at         DateTime?
+  created_at         DateTime         @default(now())
+  updated_at         DateTime         @updatedAt
+
+  company        Company       @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  auditor_member CompanyMember @relation("AuditorAccessGrantAuditorMember", fields: [auditor_member_id], references: [id], onDelete: Restrict)
+  granted_by     User          @relation("AuditorAccessGrantGrantedBy", fields: [granted_by_user_id], references: [id], onDelete: Restrict)
+  revoked_by     User?         @relation("AuditorAccessGrantRevokedBy", fields: [revoked_by_user_id], references: [id], onDelete: SetNull)
+
+  @@index([company_id, auditor_member_id, revoked_at, expires_at])
+  @@index([company_id, scope_type, scope_id, revoked_at, expires_at])
+  @@index([granted_by_user_id, created_at(sort: Desc)])
+  @@map("auditor_access_grants")
+}
+
+model Notification {
+  id                  String                         @id @default(cuid())
+  company_id          String
+  user_id             String
+  type                NotificationType
+  preference_category NotificationPreferenceCategory @default(WORKFLOW)
+  entity_type         String?
+  entity_id           String?
+  channel             NotificationChannel            @default(EMAIL)
+  status              NotificationStatus             @default(PENDING)
+  dedup_key           String?
+  subject             String
+  body                String
+  action_url          String?
+  sensitive_content   Boolean                        @default(false)
+  scheduled_at        DateTime?
+  next_attempt_at     DateTime?
+  sent_at             DateTime?
+  read_at             DateTime?
+  attempt_count       Int                            @default(0)
+  last_error          String?
+  delivery_locked_at  DateTime?
+  created_at          DateTime                       @default(now())
+  updated_at          DateTime                       @updatedAt
+
+  company    Company                @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  user       User                   @relation("NotificationRecipient", fields: [user_id], references: [id], onDelete: Restrict)
+  deliveries NotificationDelivery[]
+
+  @@unique([company_id, user_id, dedup_key])
+  @@index([company_id, user_id, status, created_at(sort: Desc)])
+  @@index([company_id, status, next_attempt_at])
+  @@index([company_id, type, entity_type, entity_id])
+  @@map("notifications")
+}
+
+model NotificationDelivery {
+  id                  String                     @id @default(cuid())
+  notification_id     String
+  attempt_no          Int
+  provider_message_id String?
+  status              NotificationDeliveryStatus @default(PENDING)
+  last_error          String?
+  attempted_at        DateTime                   @default(now())
+  next_attempt_at     DateTime?
+  completed_at        DateTime?
+
+  notification Notification @relation(fields: [notification_id], references: [id], onDelete: Restrict)
+
+  @@unique([notification_id, attempt_no])
+  @@index([notification_id, attempted_at(sort: Desc)])
+  @@index([status, next_attempt_at])
+  @@map("notification_deliveries")
+}
+
+model NotificationPreference {
+  id         String                         @id @default(cuid())
+  company_id String
+  user_id    String
+  category   NotificationPreferenceCategory
+  type       NotificationType?
+  channel    NotificationChannel            @default(EMAIL)
+  enabled    Boolean                        @default(true)
+  created_at DateTime                       @default(now())
+  updated_at DateTime                       @updatedAt
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  user    User    @relation("NotificationPreferenceUser", fields: [user_id], references: [id], onDelete: Restrict)
+
+  @@index([company_id, user_id, category, channel])
+  @@index([company_id, user_id, type, channel])
+  @@map("notification_preferences")
+}
+
+model DeletionRequest {
+  id                             String                @id @default(cuid())
+  company_id                     String
+  entity_type                    String
+  entity_id                      String
+  reason                         String
+  requested_by_user_id           String
+  approved_by_user_id            String?
+  cancelled_by_user_id           String?
+  status                         DeletionRequestStatus @default(REQUESTED)
+  execute_after                  DateTime?
+  completed_at                   DateTime?
+  failure_code                   String?
+  failure_message                String?
+  backup_limitation_acknowledged Boolean               @default(false)
+  created_at                     DateTime              @default(now())
+  updated_at                     DateTime              @updatedAt
+
+  company      Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  requested_by User    @relation("DeletionRequestRequestedBy", fields: [requested_by_user_id], references: [id], onDelete: Restrict)
+  approved_by  User?   @relation("DeletionRequestApprovedBy", fields: [approved_by_user_id], references: [id], onDelete: SetNull)
+  cancelled_by User?   @relation("DeletionRequestCancelledBy", fields: [cancelled_by_user_id], references: [id], onDelete: SetNull)
+
+  @@index([company_id, status, execute_after])
+  @@index([company_id, entity_type, entity_id, status])
+  @@index([requested_by_user_id, created_at(sort: Desc)])
+  @@map("deletion_requests")
+}
+
+model LegalHold {
+  id                  String    @id @default(cuid())
+  company_id          String
+  entity_type         String?
+  entity_id           String?
+  reason              String
+  placed_by_user_id   String
+  released_by_user_id String?
+  released_at         DateTime?
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @updatedAt
+
+  company     Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  placed_by   User    @relation("LegalHoldPlacedBy", fields: [placed_by_user_id], references: [id], onDelete: Restrict)
+  released_by User?   @relation("LegalHoldReleasedBy", fields: [released_by_user_id], references: [id], onDelete: SetNull)
+
+  @@index([company_id, entity_type, entity_id, released_at])
+  @@index([placed_by_user_id, created_at(sort: Desc)])
+  @@map("legal_holds")
+}
+
+model AuditLog {
+  id                  String   @id @default(cuid())
+  company_id          String
+  user_id             String?
+  session_id          String?
+  action              String
+  entity_type         String
+  entity_id           String
+  metadata_json       Json     @default("{}")
+  actor_snapshot_json Json     @default("{}")
+  ip_address          String?
+  user_agent          String?
+  request_id          String
+  created_at          DateTime @default(now())
+
+  company Company  @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  user    User?    @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  session Session? @relation(fields: [session_id], references: [id], onDelete: SetNull)
+
+  @@index([company_id, created_at(sort: Desc)])
+  @@index([user_id, created_at(sort: Desc)])
+  @@index([action, created_at(sort: Desc)])
+  @@map("audit_logs")
+}

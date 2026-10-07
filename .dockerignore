@@ -1,0 +1,13 @@
+.git
+.github
+node_modules
+**/node_modules
+backend/dist
+frontend/dist
+coverage
+.auditflow-storage
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
